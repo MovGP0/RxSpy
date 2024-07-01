@@ -5,6 +5,7 @@
              xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:ctl="clr-namespace:RxSpy.Views.Controls"
+             xmlns:reactiveUi="http://reactiveui.net"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="600">
     <Grid Margin="5">
@@ -16,11 +17,11 @@
         </Grid.RowDefinitions>
         
         <GroupBox Header="Tracked observables" Margin="10" Grid.Row="0">
-            <rx:ViewModelViewHost x:Name="observablesGrid" Margin="10" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+            <reactiveUi:ViewModelViewHost x:Name="observablesGrid" Margin="10" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
         </GroupBox>
 
         <GroupBox Header="Details" Margin="10" Grid.Row="1" >
-            <rx:ViewModelViewHost Margin="10" x:Name="detailsView" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"  />
+            <reactiveUi:ViewModelViewHost Margin="10" x:Name="detailsView" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"  />
         </GroupBox>
 
 

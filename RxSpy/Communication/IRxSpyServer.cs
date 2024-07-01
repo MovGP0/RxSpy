@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RxSpy.Events;
+﻿using Google.Protobuf;
 
-namespace RxSpy.Communication
+namespace RxSpy.Communication;
+
+internal interface IRxSpyServer: IDisposable
 {
-    internal interface IRxSpyServer: IDisposable
-    {
-        Uri Address { get; }
-
-        void WaitForConnection(TimeSpan timeout);
-        void EnqueueEvent(IEvent ev);
-    }
+    Uri Address { get; }
+    void WaitForConnection(TimeSpan timeout);
+    void EnqueueEvent(IMessage ev);
 }

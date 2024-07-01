@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package RxSpy;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "RxSpy.Protobuf.Events";
+option optimize_for = SPEED;
+
+message MethodInfo {
+  string declaringType = 1;
+  string name = 2;
+  string namespace = 3;
+  string signature = 4;
+}
+
+message CallSite {
+  string file = 1;
+  int32 ilOffset = 2;
+  int32 line = 3;
+  MethodInfo method = 4;
+}
+
+message TypeInfo {
+  string name = 1;
+  string namespace = 2;
+}
+
+enum EventType {
+  OperatorCreated = 0;
+  OperatorCollected = 1;
+  Subscribe = 2;
+  Unsubscribe = 3;
+  OnNext = 4;
+  OnError = 5;
+  OnCompleted = 6;
+  TagOperator = 7;
+  Connected = 8;
+  Disconnected = 9;
+}
+
+message Event {
+  EventType eventType = 1;
+  int64 eventId = 2;
+  google.protobuf.Timestamp eventTime = 3;
+}
+
+message ConnectedEvent {
+  Event base_event = 1;
+  int64 operatorId = 2;
+}
+
+message DisconnectedEvent {
+  Event base_event = 1;
+  int64 connectionId = 2;
+}
+
+message OnCompletedEvent {
+  Event base_event = 1;
+  int64 operatorId = 2;
+}
+
+message OnErrorEvent {
+  Event base_event = 1;
+  TypeInfo errorType = 2;
+  string message = 3;
+  string stackTrace = 4;
+  int64 operatorId = 5;
+}
+
+message OnNextEvent {
+  Event base_event = 1;
+  int64 operatorId = 2;
+  string valueType = 3;
+  string value = 4;
+  int32 thread = 5;
+}
+
+message SubscribeEvent {
+  Event base_event = 1;
+  int64 childId = 2;
+  int64 parentId = 3;
+}
+
+message TagOperatorEvent {
+  Event base_event = 1;
+  int64 operatorId = 2;
+  string tag = 3;
+}
+
+message UnsubscribeEvent {
+  Event base_event = 1;
+  int64 subscriptionId = 2;
+}
+
+message OperatorCreatedEvent {
+  Event base_event = 1;
+  int64 id = 2;
+  string name = 3;
+  CallSite callSite = 4;
+  MethodInfo operatorMethod = 5;
+}
+
+message OperatorInfo {
+  string Name = 1;
+  int64 Id = 2;
+  CallSite CallSite = 3;
+  MethodInfo OperatorMethod = 4;
+  bool IsAnonymous = 5;
+}
+
+message RxSpyEvents {
+  oneof Event {
+    OperatorCreatedEvent operatorCreated = 1;
+    OperatorInfo operatorInfo = 2;
+    OperatorInfo operatorCollected = 3;
+    SubscribeEvent subscribe = 4;
+    UnsubscribeEvent unsubscribe = 5;
+    OnNextEvent onNext = 6;
+    OnErrorEvent onError = 7;
+    OnCompletedEvent onCompleted = 8;
+    TagOperatorEvent tagOperator = 9;
+    ConnectedEvent connected = 10;
+    DisconnectedEvent disconnected = 11;
+  }
+}
+
+service RxSpyService {
+  rpc GetEvents(google.protobuf.Empty) returns (stream RxSpyEvents);
+}

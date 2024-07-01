@@ -1,90 +1,83 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using RxSpy.Events;
+﻿using RxSpy.Protobuf.Events;
 
-namespace RxSpy.StressTest
+namespace RxSpy.StressTest;
+
+public sealed class StressTestEventHandler: IRxSpyEventHandler
 {
-    public class StressTestEventHandler: IRxSpyEventHandler
+    private readonly IRxSpyEventHandler _inner;
+    private int _eventCount;
+    private int _observableCount;
+
+    public int EventCount => _eventCount;
+    public int ObservableCount => _observableCount;
+
+    public StressTestEventHandler(IRxSpyEventHandler inner)
     {
-        IRxSpyEventHandler _inner;
-        int eventCount;
-        int observableCount;
+        _inner = inner;
+    }
 
-        public int EventCount { get { return eventCount; } }
-        public int ObservableCount { get { return observableCount; } }
+    private void Increment()
+    {
+        Interlocked.Increment(ref _eventCount);
+    }
 
-        public StressTestEventHandler(IRxSpyEventHandler inner)
-        {
-            _inner = inner;
-        }
+    public void OnCreated(OperatorCreatedEvent onCreatedEvent)
+    {
+        Interlocked.Increment(ref _observableCount);
+        Increment();
+        _inner.OnCreated(onCreatedEvent);
+    }
 
-        private void Increment()
-        {
-            Interlocked.Increment(ref eventCount);
-        }
+    public void OnCompleted(OnCompletedEvent onCompletedEvent)
+    {
+        Increment();
+        _inner.OnCompleted(onCompletedEvent);
+    }
 
-        public void OnCreated(IOperatorCreatedEvent onCreatedEvent)
-        {
-            Interlocked.Increment(ref observableCount);
-            Increment();
-            _inner.OnCreated(onCreatedEvent);
-        }
+    public void OnError(OnErrorEvent onErrorEvent)
+    {
+        Increment();
+        _inner.OnError(onErrorEvent);
+    }
 
-        public void OnCompleted(IOnCompletedEvent onCompletedEvent)
-        {
-            Increment();
-            _inner.OnCompleted(onCompletedEvent);
-        }
+    public void OnNext(OnNextEvent onNextEvent)
+    {
+        Increment();
+        _inner.OnNext(onNextEvent);
+    }
 
-        public void OnError(IOnErrorEvent onErrorEvent)
-        {
-            Increment();
-            _inner.OnError(onErrorEvent);
-        }
+    public void OnSubscribe(SubscribeEvent subscribeEvent)
+    {
+        Increment();
+        _inner.OnSubscribe(subscribeEvent);
+    }
 
-        public void OnNext(IOnNextEvent onNextEvent)
-        {
-            Increment();
-            _inner.OnNext(onNextEvent);
-        }
+    public void OnUnsubscribe(UnsubscribeEvent unsubscribeEvent)
+    {
+        Increment();
+        _inner.OnUnsubscribe(unsubscribeEvent);
+    }
 
-        public void OnSubscribe(ISubscribeEvent subscribeEvent)
-        {
-            Increment();
-            _inner.OnSubscribe(subscribeEvent);
-        }
+    public void OnConnected(ConnectedEvent connectedEvent)
+    {
+        Increment();
+        _inner.OnConnected(connectedEvent);
+    }
 
-        public void OnUnsubscribe(IUnsubscribeEvent unsubscribeEvent)
-        {
-            Increment();
-            _inner.OnUnsubscribe(unsubscribeEvent);
-        }
+    public void OnDisconnected(DisconnectedEvent disconnectedEvent)
+    {
+        Increment();
+        _inner.OnDisconnected(disconnectedEvent);
+    }
 
-        public void OnConnected(IConnectedEvent connectedEvent)
-        {
-            Increment();
-            _inner.OnConnected(connectedEvent);
-        }
+    public void OnTag(TagOperatorEvent tagEvent)
+    {
+        Increment();
+        _inner.OnTag(tagEvent);
+    }
 
-        public void OnDisconnected(IDisconnectedEvent disconnectedEvent)
-        {
-            Increment();
-            _inner.OnDisconnected(disconnectedEvent);
-        }
-
-        public void OnTag(ITagOperatorEvent tagEvent)
-        {
-            Increment();
-            _inner.OnTag(tagEvent);
-        }
-
-        public void Dispose()
-        {
-            _inner.Dispose();
-        }
+    public void Dispose()
+    {
+        _inner.Dispose();
     }
 }

@@ -1,161 +1,110 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
+﻿using System.Reactive.Linq;
+using CP.Reactive;
 using ReactiveUI;
-using RxSpy.Events;
+using ReactiveUI.Fody.Helpers;
+using RxSpy.Protobuf.Events;
 
-namespace RxSpy.Models
+namespace RxSpy.Models;
+
+public sealed class RxSpyObservableModel: ReactiveObject
 {
-    public class RxSpyObservableModel: ReactiveObject
+    public long Id { get; set; }
+    public string Name { get; set; }
+
+    public MethodInfo OperatorMethod { get; private set; }
+    public CallSite CallSite { get; private set; }
+
+    [Reactive]
+    public string Tag { get; set; }
+
+    public TimeSpan Created { get; private set; }
+
+    [Reactive]
+    public ReactiveList<RxSpyObservableModel> Parents { get; set; }
+
+    [Reactive]
+    public ReactiveList<RxSpyObservableModel> Children { get; set; }
+
+    [Reactive]
+    public ReactiveList<RxSpySubscriptionModel> Subscriptions { get; set; }
+
+    [Reactive]
+    public ReactiveList<RxSpyObservedValueModel> ObservedValues { get; set; }
+
+    [Reactive]
+    public RxSpyErrorModel Error { get; set; }
+
+    readonly ObservableAsPropertyHelper<bool> _hasError;
+    public bool HasError => _hasError.Value;
+
+    [Reactive]
+    public bool IsActive { get; set; }
+
+    [Reactive]
+    public long ValuesProduced { get; set; }
+
+    readonly ObservableAsPropertyHelper<int> _descendants;
+    public int Descendants => _descendants.Value;
+
+    readonly ObservableAsPropertyHelper<int> _ancestors;
+    public int Ancestors => _ancestors.Value;
+
+    [Reactive]
+    public string Status { get; set; }
+
+    public RxSpyObservableModel(OperatorCreatedEvent createdEvent)
     {
-        public long Id { get; set; }
-        public string Name { get; set; }
+        Id = createdEvent.Id;
+        Name = createdEvent.Name;
+        OperatorMethod = createdEvent.OperatorMethod;
+        CallSite = createdEvent.CallSite;
+        IsActive = true;
+        Created = createdEvent.BaseEvent.EventTime.ToTimeSpan();
+        Subscriptions = new ReactiveList<RxSpySubscriptionModel>();
+        Parents = new ReactiveList<RxSpyObservableModel>();
+        Children = new ReactiveList<RxSpyObservableModel>();
+        ObservedValues = new ReactiveList<RxSpyObservedValueModel>();
 
-        public IMethodInfo OperatorMethod { get; private set; }
-        public ICallSite CallSite { get; private set; }
+        this.WhenAnyValue(x => x.Error)
+            .Select(x => x == null ? false : true)
+            .ToProperty(this, x => x.HasError, out _hasError);
 
-        string _tag;
-        public string Tag
-        {
-            get { return _tag; }
-            set { this.RaiseAndSetIfChanged(ref _tag, value); }
-        }
+        this.WhenAnyValue(x => x.Children.Count)
+            .Select(_ => Children.Select(c => c.WhenAnyValue(x => x.Descendants)).CombineLatest())
+            .Switch()
+            .Select(x => x.Sum() + Children.Count)
+            .ToProperty(this, x => x.Descendants, out _descendants);
 
-        public TimeSpan Created { get; private set; }
+        this.WhenAnyValue(x => x.Parents.Count)
+            .Select(_ => Parents.Select(c => c.WhenAnyValue(x => x.Ancestors)).CombineLatest())
+            .Switch()
+            .Select(x => x.Sum() + Parents.Count)
+            .ToProperty(this, x => x.Ancestors, out _ancestors);
 
-        ReactiveList<RxSpyObservableModel> _parents;
-        public ReactiveList<RxSpyObservableModel> Parents
-        {
-            get { return _parents; }
-            private set { this.RaiseAndSetIfChanged(ref _parents, value); }
-        }
+        Status = "Active";
+    }
 
-        ReactiveList<RxSpyObservableModel> _children;
-        public ReactiveList<RxSpyObservableModel> Children
-        {
-            get { return _children; }
-            private set { this.RaiseAndSetIfChanged(ref _children, value); }
-        }
+    public void OnNext(OnNextEvent onNextEvent)
+    {
+        ObservedValues.Add(new RxSpyObservedValueModel(onNextEvent));
+        ValuesProduced++;
+    }
 
-        ReactiveList<RxSpySubscriptionModel> _subscriptions;
-        public ReactiveList<RxSpySubscriptionModel> Subscriptions
-        {
-            get { return _subscriptions; }
-            private set { this.RaiseAndSetIfChanged(ref _subscriptions, value); }
-        }
+    public void OnCompleted(OnCompletedEvent onCompletedEvent)
+    {
+        IsActive = false;
+        Status = "Completed";
+    }
 
-        ReactiveList<RxSpyObservedValueModel> _observedValues;
-        public ReactiveList<RxSpyObservedValueModel> ObservedValues
-        {
-            get { return _observedValues; }
-            private set { this.RaiseAndSetIfChanged(ref _observedValues, value); }
-        }
-        RxSpyErrorModel _error;
-        public RxSpyErrorModel Error
-        {
-            get { return _error; }
-            set { this.RaiseAndSetIfChanged(ref _error, value); }
-        }
+    public void OnError(OnErrorEvent onErrorEvent)
+    {
+        Error = new RxSpyErrorModel(onErrorEvent);
+        IsActive = false;
+        Status = "Error";
+    }
 
-        readonly ObservableAsPropertyHelper<bool> _hasError;
-        public bool HasError
-        {
-            get { return _hasError.Value; }
-        }
-
-        bool _isActive;
-        public bool IsActive
-        {
-            get { return _isActive; }
-            set { this.RaiseAndSetIfChanged(ref _isActive, value); }
-        }
-
-        long _valuesProduced;
-        public long ValuesProduced
-        {
-            get { return _valuesProduced; }
-            set { this.RaiseAndSetIfChanged(ref _valuesProduced, value); }
-        }
-
-        readonly ObservableAsPropertyHelper<int> _descendants;
-        public int Descendants
-        {
-            get { return _descendants.Value; }
-        }
-
-        readonly ObservableAsPropertyHelper<int> _ancestors;
-        public int Ancestors
-        {
-            get { return _ancestors.Value; }
-        }
-
-        string _status;
-        public string Status
-        {
-            get { return _status; }
-            private set { this.RaiseAndSetIfChanged(ref _status, value); }
-        }
-
-        public RxSpyObservableModel(IOperatorCreatedEvent createdEvent)
-        {
-            Id = createdEvent.Id;
-            Name = createdEvent.Name;
-            OperatorMethod = createdEvent.OperatorMethod;
-            CallSite = createdEvent.CallSite;
-            IsActive = true;
-
-            Created = TimeSpan.FromMilliseconds(createdEvent.EventTime);
-
-            Subscriptions = new ReactiveList<RxSpySubscriptionModel>();
-            Parents = new ReactiveList<RxSpyObservableModel>();
-            Children = new ReactiveList<RxSpyObservableModel>();
-
-            ObservedValues = new ReactiveList<RxSpyObservedValueModel>();
-
-            this.WhenAnyValue(x => x.Error)
-                .Select(x => x == null ? false : true)
-                .ToProperty(this, x => x.HasError, out _hasError);
-
-            this.WhenAnyValue(x => x.Children.Count)
-                .Select(_ => Observable.CombineLatest(Children.Select(c => c.WhenAnyValue(x => x.Descendants))))
-                .Switch()
-                .Select(x => x.Sum() + Children.Count)
-                .ToProperty(this, x => x.Descendants, out _descendants);
-
-            this.WhenAnyValue(x => x.Parents.Count)
-                .Select(_ => Observable.CombineLatest(Parents.Select(c => c.WhenAnyValue(x => x.Ancestors))))
-                .Switch()
-                .Select(x => x.Sum() + Parents.Count)
-                .ToProperty(this, x => x.Ancestors, out _ancestors);
-
-            Status = "Active";
-        }
-
-        public void OnNext(IOnNextEvent onNextEvent)
-        {
-            ObservedValues.Add(new RxSpyObservedValueModel(onNextEvent));
-            ValuesProduced++;
-        }
-
-        public void OnCompleted(IOnCompletedEvent onCompletedEvent)
-        {
-            IsActive = false;
-            Status = "Completed";
-        }
-
-        public void OnError(IOnErrorEvent onErrorEvent)
-        {
-            Error = new RxSpyErrorModel(onErrorEvent);
-            IsActive = false;
-            Status = "Error";
-        }
-
-        public void OnTag(ITagOperatorEvent onTagEvent)
-        {
-            Tag = onTagEvent.Tag;
-        }
+    public void OnTag(TagOperatorEvent onTagEvent)
+    {
+        Tag = onTagEvent.Tag;
     }
 }

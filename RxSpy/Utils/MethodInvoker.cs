@@ -10,7 +10,7 @@ namespace RxSpy.Utils
 {
     public static class MethodInvoker
     {
-        readonly static ConcurrentDictionary<MethodBase, Lazy<Func<object, object[], object>>> _cache
+        private readonly static ConcurrentDictionary<MethodBase, Lazy<Func<object, object[], object>>> _cache
             = new ConcurrentDictionary<MethodBase, Lazy<Func<object, object[], object>>>();
 
         public static object Invoke(object target, Type targetType, MethodInfo method, object[] args)
@@ -23,7 +23,7 @@ namespace RxSpy.Utils
             return invokeDelegate.Value(target, args);
         }
 
-        static Func<object, object[], object> CreateInvokeDelegate(Type targetType, MethodInfo method)
+        private static Func<object, object[], object> CreateInvokeDelegate(Type targetType, MethodInfo method)
         {
             var invokeDelegate = new DynamicMethod("InvokeFast_" + method.Name, typeof(object), new[] { typeof(object), typeof(object[]) }, true);
             

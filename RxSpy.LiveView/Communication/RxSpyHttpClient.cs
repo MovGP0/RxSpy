@@ -1,71 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
+using Google.Protobuf;
 using ReactiveUI;
-using RxSpy.Communication.Serialization;
-using RxSpy.Events;
 
-namespace RxSpy.Communication
+namespace RxSpy.Communication;
+
+public class RxSpyHttpClient : ReactiveObject, IRxSpyClient
 {
-    public class RxSpyHttpClient : ReactiveObject, IRxSpyClient
+    public IObservable<IMessage> Connect(Uri address, TimeSpan timeout)
     {
-        readonly HttpClient _client;
+        return GetStream(new Uri(address, "stream"), timeout);
+    }
 
-        public RxSpyHttpClient()
+    private static IObservable<IMessage> GetStream(Uri address, TimeSpan timeout)
+    {
+        var client = new HttpClient();
+        client.Timeout = timeout;
+
+        var req = new HttpRequestMessage(HttpMethod.Get, address);
+        var disp = new CompositeDisposable(req, client);
+
+        var completionOptions = HttpCompletionOption.ResponseHeadersRead;
+
+        return Observable.FromAsync<HttpResponseMessage>(ct => client.SendAsync(req, completionOptions, ct))
+            .SelectMany(resp =>
+                resp.StatusCode == HttpStatusCode.OK
+                    ? Observable.FromAsync(() => resp.Content.ReadAsStreamAsync())
+                    : Observable.Throw<Stream>(new Exception("Could not open room stream: " + resp.ReasonPhrase)))
+            .SelectMany(ReadEvents)
+            .Finally(disp.Dispose);
+    }
+
+    private static IObservable<IMessage> ReadEvents(Stream stream)
+    {
+        return Observable.Create<IMessage>(async (observer, ct) =>
         {
-            _client = new HttpClient();
-        }
+            using var sr = new StreamReader(stream);
 
-        public IObservable<IEvent> Connect(Uri address, TimeSpan timeout)
-        {
-            return GetStream(new Uri(address, "stream"), timeout);
-        }
-
-        public IObservable<IEvent> GetStream(Uri address, TimeSpan timeout)
-        {
-            var client = new HttpClient();
-            client.Timeout = timeout;
-
-            var req = new HttpRequestMessage(HttpMethod.Get, address);
-            var disp = new CompositeDisposable(req);
-
-            var completionOptions = HttpCompletionOption.ResponseHeadersRead;
-
-            return Observable.FromAsync<HttpResponseMessage>(ct => client.SendAsync(req, completionOptions, ct))
-                .SelectMany(resp =>
-                    resp.StatusCode == HttpStatusCode.OK
-                        ? Observable.FromAsync(() => resp.Content.ReadAsStreamAsync())
-                        : Observable.Throw<Stream>(new Exception("Could not open room stream: " + resp.ReasonPhrase)))
-                .SelectMany(ReadEvents)
-                .Finally(disp.Dispose);
-        }
-
-        IObservable<IEvent> ReadEvents(Stream stream)
-        {
-            var strategy = new RxSpyJsonSerializerStrategy();
-
-            return Observable.Create<IEvent>(async (observer, ct) =>
+            while (await sr.ReadLineAsync(ct) is { } line)
             {
-                using (var sr = new StreamReader(stream))
+                ct.ThrowIfCancellationRequested();
+                var message = JsonSerializer.Deserialize<IMessage>(line);
+                if (message is not null)
                 {
-                    string line;
-
-                    while (((line = await sr.ReadLineAsync()) != null))
-                    {
-                        ct.ThrowIfCancellationRequested();
-                        observer.OnNext(SimpleJson.DeserializeObject<IEvent>(line, strategy));
-                    }
-
-                    observer.OnCompleted();
+                    observer.OnNext(message);
                 }
-            });
-        }
+            }
+
+            observer.OnCompleted();
+        });
     }
 }

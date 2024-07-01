@@ -1,48 +1,33 @@
-﻿using System.Threading;
-using RxSpy.Events;
+﻿using RxSpy.Protobuf.Events;
 
-namespace RxSpy
+namespace RxSpy;
+
+public static class OperatorInfoFactory
 {
-    public class OperatorInfo
+    private static long _idCounter;
+
+    internal static OperatorInfo Create(CallSite callSite, MethodInfo operatorMethod)
     {
-        static long idCounter = 0;
-
-        readonly string _name;
-        readonly bool _anonymous;
-        readonly long _id;
-        readonly string _friendlyName;
-        readonly CallSite _callSite;
-        readonly MethodInfo _operatorMethod;
-
-        public string Name { get { return _name; } }
-        public long Id { get { return _id; } }
-        public CallSite CallSite { get { return _callSite; } }
-        public MethodInfo OperatorMethod { get { return _operatorMethod; } }
-        public bool IsAnonymous { get { return _anonymous; } }
-
-        internal OperatorInfo(CallSite callSite, MethodInfo operatorMethod)
+        return new OperatorInfo
         {
-            _id = Interlocked.Increment(ref idCounter);
-
-            _callSite = callSite;
-            _operatorMethod = operatorMethod;
-
-            _name = _operatorMethod.Name;
-            _friendlyName = _name + "#" + _id;
-            _anonymous = false;
-        }
-
-        internal OperatorInfo(string name)
-        {
-            _id = Interlocked.Increment(ref idCounter);
-            _name = name;
-            _friendlyName = _name + "#" + _id;
-            _anonymous = true;
-        }
-
-        public override string ToString()
-        {
-            return _friendlyName;
-        }
+            Id = Interlocked.Increment(ref _idCounter),
+            CallSite = callSite,
+            OperatorMethod = operatorMethod,
+            Name = operatorMethod.Name,
+            IsAnonymous = false
+        };
     }
+
+    internal static OperatorInfo Create(string name)
+    {
+        return new OperatorInfo
+        {
+            Id = Interlocked.Increment(ref _idCounter),
+            Name = name,
+            IsAnonymous = true
+        };
+    }
+
+    public static string ToString(OperatorInfo operatorInfo)
+        => operatorInfo.Name + "#" + operatorInfo.Id;
 }

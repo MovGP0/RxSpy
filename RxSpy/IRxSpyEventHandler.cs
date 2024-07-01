@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RxSpy.Events;
+﻿using RxSpy.Protobuf.Events;
 
-namespace RxSpy
+namespace RxSpy;
+
+public interface IRxSpyEventHandler: IDisposable
 {
-    public interface IRxSpyEventHandler: IDisposable
-    {
-        void OnCreated(IOperatorCreatedEvent onCreatedEvent);
-        void OnCompleted(IOnCompletedEvent onCompletedEvent);
-        void OnError(IOnErrorEvent onErrorEvent);
-        void OnNext(IOnNextEvent onNextEvent);
-        void OnSubscribe(ISubscribeEvent subscribeEvent);
-        void OnUnsubscribe(IUnsubscribeEvent unsubscribeEvent);
-        void OnConnected(IConnectedEvent connectedEvent);
-        void OnDisconnected(IDisconnectedEvent disconnectedEvent);
-        void OnTag(ITagOperatorEvent tagEvent);
-    }
+    void OnCreated(OperatorCreatedEvent onCreatedEvent);
+    void OnCompleted(OnCompletedEvent onCompletedEvent);
+    void OnError(OnErrorEvent onErrorEvent);
+    void OnNext(OnNextEvent onNextEvent);
+    void OnSubscribe(SubscribeEvent subscribeEvent);
+    void OnUnsubscribe(UnsubscribeEvent unsubscribeEvent);
+    void OnConnected(ConnectedEvent connectedEvent);
+    void OnDisconnected(DisconnectedEvent disconnectedEvent);
+    void OnTag(TagOperatorEvent tagEvent);
 }

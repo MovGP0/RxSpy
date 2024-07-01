@@ -10,10 +10,10 @@ namespace RxSpy.Utils
 {
     public class DebuggerDisplayFormatter
     {
-        readonly static ConcurrentDictionary<Type, Lazy<Func<object, string>>> _cachedFormatters =
+        private readonly static ConcurrentDictionary<Type, Lazy<Func<object, string>>> _cachedFormatters =
             new ConcurrentDictionary<Type, Lazy<Func<object, string>>>();
 
-        static readonly Regex DebuggerDisplayPropertyRe = new Regex(@"\{\s*(\w[\w\d]+)(,nq)?\s*\}");
+        private static readonly Regex DebuggerDisplayPropertyRe = new Regex(@"\{\s*(\w[\w\d]+)(,nq)?\s*\}");
 
         public static bool TryFormat(Type type, object target, out string value)
         {
@@ -43,7 +43,7 @@ namespace RxSpy.Utils
             return true;
         }
 
-        static Lazy<Func<object, string>> CreateFormatter(Type type)
+        private static Lazy<Func<object, string>> CreateFormatter(Type type)
         {
             var debuggerDisplayAttributes = type.GetCustomAttributes(typeof(DebuggerDisplayAttribute), false);
 
@@ -60,7 +60,7 @@ namespace RxSpy.Utils
             );
         }
 
-        static Func<object, string> BuildFormatterDelegate(Type type, string format)
+        private static Func<object, string> BuildFormatterDelegate(Type type, string format)
         {
             // We only support simple property getters for now, no method invocation
 
@@ -107,7 +107,7 @@ namespace RxSpy.Utils
             }
         }
 
-        static Func<object, string> CreatePropertyValueDelegate(Type type, string propertyName, bool quote)
+        private static Func<object, string> CreatePropertyValueDelegate(Type type, string propertyName, bool quote)
         {
             var propertyInfo = type.GetProperty(propertyName);
 

@@ -1,155 +1,122 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Collections.Concurrent;
 using ReactiveUI;
-using RxSpy.Events;
-using System.Reactive.Linq;
+using CP.Reactive;
+using Google.Protobuf;
+using ReactiveUI.Fody.Helpers;
+using RxSpy.Protobuf.Events;
 
-namespace RxSpy.Models
+namespace RxSpy.Models;
+
+public class RxSpySessionModel : ReactiveObject
 {
-    public class RxSpySessionModel : ReactiveObject
+    readonly ConcurrentDictionary<long, RxSpyObservableModel> _observableRepository = new();
+
+    readonly ConcurrentDictionary<long, RxSpySubscriptionModel> _subscriptionRepository = new();
+
+    public ReactiveList<RxSpyObservableModel> TrackedObservables { get; set; }
+
+    [Reactive]
+    public long SignalCount { get; set; }
+
+    [Reactive]
+    public long ErrorCount { get; set; }
+
+    public RxSpySessionModel()
     {
-        readonly ConcurrentDictionary<long, RxSpyObservableModel> observableRepository
-            = new ConcurrentDictionary<long, RxSpyObservableModel>();
+        TrackedObservables = new ReactiveList<RxSpyObservableModel>();
+    }
 
-        readonly ConcurrentDictionary<long, RxSpySubscriptionModel> subscriptionRepository
-            = new ConcurrentDictionary<long, RxSpySubscriptionModel>();
-
-        public ReactiveList<RxSpyObservableModel> TrackedObservables { get; set; }
-
-        long _signalCount;
-        public long SignalCount
+    internal void OnEvent(IMessage ev)
+    {
+        switch (ev)
         {
-            get { return _signalCount; }
-            set { this.RaiseAndSetIfChanged(ref _signalCount, value); }
+            case OperatorCreatedEvent operatorCreatedEvent:
+                OnOperatorCreated(operatorCreatedEvent);
+                return;
+            case SubscribeEvent subscribeEvent:
+                OnSubscribe(subscribeEvent);
+                return;
+            case UnsubscribeEvent unsubscribeEvent:
+                OnUnsubscribe(unsubscribeEvent);
+                return;
+            case OnCompletedEvent onCompletedEvent:
+                OnCompleted(onCompletedEvent);
+                return;
+            case OnNextEvent onNextEvent:
+                OnNext(onNextEvent);
+                return;
+            case OnErrorEvent onErrorEvent:
+                OnError(onErrorEvent);
+                return;
+            case TagOperatorEvent tagOperatorEvent:
+                OnTag(tagOperatorEvent);
+                return;
+            default:
+                return;
         }
+    }
 
-        long _errorCount;
-        public long ErrorCount
+    private void OnOperatorCreated(OperatorCreatedEvent operatorCreatedEvent)
+    {
+        var operatorModel = new RxSpyObservableModel(operatorCreatedEvent);
+
+        _observableRepository.TryAdd(operatorCreatedEvent.Id, operatorModel);
+        TrackedObservables.Add(operatorModel);
+    }
+
+    private void OnSubscribe(SubscribeEvent subscribeEvent)
+    {
+        _observableRepository.TryGetValue(subscribeEvent.ChildId, out var child);
+        _observableRepository.TryGetValue(subscribeEvent.ParentId, out var parent);
+
+        var subscriptionModel = new RxSpySubscriptionModel(subscribeEvent, child, parent)
         {
-            get { return _errorCount; }
-            set { this.RaiseAndSetIfChanged(ref _errorCount, value); }
-        }
+            IsActive = true
+        };
 
-        public RxSpySessionModel()
+        _subscriptionRepository.TryAdd(subscribeEvent.BaseEvent.EventId, subscriptionModel);
+
+        parent.Subscriptions.Add(subscriptionModel);
+
+        parent.Children.Add(child);
+        child.Parents.Add(parent);
+    }
+
+    private void OnUnsubscribe(UnsubscribeEvent unsubscribeEvent)
+    {
+        _subscriptionRepository.TryGetValue(unsubscribeEvent.SubscriptionId, out var subscriptionModel);
+
+        if (subscriptionModel != null)
         {
-            TrackedObservables = new ReactiveList<RxSpyObservableModel>();
+            subscriptionModel.IsActive = false;
         }
+    }
 
-        internal void OnEvent(IEvent ev)
-        {
-            switch (ev.EventType)
-            {
-                case EventType.OperatorCreated:
-                    OnOperatorCreated((IOperatorCreatedEvent)ev);
-                    break;
+    private void OnError(OnErrorEvent onErrorEvent)
+    {
+        ErrorCount++;
 
-                case EventType.Subscribe:
-                    OnSubscribe((ISubscribeEvent)ev);
-                    break;
+        _observableRepository.TryGetValue(onErrorEvent.OperatorId, out var operatorModel);
+        operatorModel?.OnError(onErrorEvent);
+    }
 
-                case EventType.Unsubscribe:
-                    OnUnsubscribe((IUnsubscribeEvent)ev);
-                    break;
+    private void OnNext(OnNextEvent onNextEvent)
+    {
+        SignalCount++;
 
-                case EventType.OnCompleted:
-                    OnCompleted((IOnCompletedEvent)ev);
-                    break;
+        _observableRepository.TryGetValue(onNextEvent.OperatorId, out var operatorModel);
+        operatorModel?.OnNext(onNextEvent);
+    }
 
-                case EventType.OnNext:
-                    OnNext((IOnNextEvent)ev);
-                    break;
+    private void OnCompleted(OnCompletedEvent onCompletedEvent)
+    {
+        _observableRepository.TryGetValue(onCompletedEvent.OperatorId, out var operatorModel);
+        operatorModel?.OnCompleted(onCompletedEvent);
+    }
 
-                case EventType.OnError:
-                    OnError((IOnErrorEvent)ev);
-                    break;
-
-                case EventType.TagOperator:
-                    OnTag((ITagOperatorEvent)ev);
-                    break;
-            }
-        }
-
-        void OnOperatorCreated(IOperatorCreatedEvent operatorCreatedEvent)
-        {
-            var operatorModel = new RxSpyObservableModel(operatorCreatedEvent);
-
-            observableRepository.TryAdd(operatorCreatedEvent.Id, operatorModel);
-            TrackedObservables.Add(operatorModel);
-        }
-
-        void OnSubscribe(ISubscribeEvent subscribeEvent)
-        {
-            RxSpyObservableModel child, parent;
-
-            observableRepository.TryGetValue(subscribeEvent.ChildId, out child);
-            observableRepository.TryGetValue(subscribeEvent.ParentId, out parent);
-
-            var subscriptionModel = new RxSpySubscriptionModel(subscribeEvent, child, parent)
-            {
-                IsActive = true
-            };
-
-            subscriptionRepository.TryAdd(subscribeEvent.EventId, subscriptionModel);
-
-            parent.Subscriptions.Add(subscriptionModel);
-
-            parent.Children.Add(child);
-            child.Parents.Add(parent);
-        }
-
-        void OnUnsubscribe(IUnsubscribeEvent unsubscribeEvent)
-        {
-            RxSpySubscriptionModel subscriptionModel;
-
-            subscriptionRepository.TryGetValue(unsubscribeEvent.SubscriptionId, out subscriptionModel);
-
-            if (subscriptionModel != null)
-            {
-                subscriptionModel.IsActive = false;
-            }
-        }
-
-        private void OnError(IOnErrorEvent onErrorEvent)
-        {
-            ErrorCount++;
-
-            RxSpyObservableModel operatorModel;
-            observableRepository.TryGetValue(onErrorEvent.OperatorId, out operatorModel);
-
-            operatorModel.OnError(onErrorEvent);
-        }
-
-        private void OnNext(IOnNextEvent onNextEvent)
-        {
-            SignalCount++;
-
-            RxSpyObservableModel operatorModel;
-            observableRepository.TryGetValue(onNextEvent.OperatorId, out operatorModel);
-
-            operatorModel.OnNext(onNextEvent);
-        }
-
-        void OnCompleted(IOnCompletedEvent onCompletedEvent)
-        {
-            RxSpyObservableModel operatorModel;
-            observableRepository.TryGetValue(onCompletedEvent.OperatorId, out operatorModel);
-
-            if (operatorModel != null)
-            {
-                operatorModel.OnCompleted(onCompletedEvent);
-            }
-        }
-
-        private void OnTag(ITagOperatorEvent tagOperatorEvent)
-        {
-            RxSpyObservableModel operatorModel;
-            observableRepository.TryGetValue(tagOperatorEvent.OperatorId, out operatorModel);
-
-            if (operatorModel != null)
-            {
-                operatorModel.OnTag(tagOperatorEvent);
-            }
-        }
+    private void OnTag(TagOperatorEvent tagOperatorEvent)
+    {
+        _observableRepository.TryGetValue(tagOperatorEvent.OperatorId, out var operatorModel);
+        operatorModel?.OnTag(tagOperatorEvent);
     }
 }

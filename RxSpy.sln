@@ -18,7 +18,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.LiveView", "RxSpy.Liv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy", "RxSpy\RxSpy.csproj", "{AD01307E-2429-482A-9F7A-A8AA147BCFDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.Shared", "RxSpy.Shared\RxSpy.Shared.csproj", "{1E10026E-8A90-46F1-8FB2-06BEDC21B4CC}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Protos", "Protos", "{440EA6A5-6BF2-4878-AFDC-24C246BE8A7F}"
+	ProjectSection(SolutionItems) = preProject
+		Protos\RxSpy.Models.Events.proto = Protos\RxSpy.Models.Events.proto
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,10 +45,6 @@ Global
 		{AD01307E-2429-482A-9F7A-A8AA147BCFDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD01307E-2429-482A-9F7A-A8AA147BCFDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD01307E-2429-482A-9F7A-A8AA147BCFDA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1E10026E-8A90-46F1-8FB2-06BEDC21B4CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1E10026E-8A90-46F1-8FB2-06BEDC21B4CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1E10026E-8A90-46F1-8FB2-06BEDC21B4CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1E10026E-8A90-46F1-8FB2-06BEDC21B4CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,7 +12,7 @@ namespace RxSpy.Utils
 {
     public static class ValueFormatter
     {
-        readonly static ConcurrentDictionary<Type, Lazy<Func<object, string>>> _cachedFormatters =
+        private readonly static ConcurrentDictionary<Type, Lazy<Func<object, string>>> _cachedFormatters =
             new ConcurrentDictionary<Type, Lazy<Func<object, string>>>();
 
         public static string ToString(object value)

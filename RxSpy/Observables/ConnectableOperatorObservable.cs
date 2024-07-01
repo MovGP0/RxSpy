@@ -1,31 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Disposables;
+﻿using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using RxSpy.Events;
+using RxSpy.Protobuf.Events;
 
-namespace RxSpy.Observables
+namespace RxSpy.Observables;
+
+internal class ConnectableOperatorObservable<T> : OperatorObservable<T>, IConnectableObservable<T>
 {
-    internal class ConnectableOperatorObservable<T> : OperatorObservable<T>, IConnectableObservable<T>
+    private readonly IConnectableObservable<T> _connectableObservable;
+
+    public ConnectableOperatorObservable(
+        RxSpySession session,
+        IConnectableObservable<T> parent,
+        OperatorInfo operatorInfo)
+        : base(session, parent, operatorInfo)
     {
-        readonly IConnectableObservable<T> _connectableObservable;
+        _connectableObservable = parent;
+    }
 
-        public ConnectableOperatorObservable(RxSpySession session, IConnectableObservable<T> parent, OperatorInfo operatorInfo)
-            : base(session, parent, operatorInfo)
+    public IDisposable Connect()
+    {
+        var connectionId = Session.OnConnected(OperatorInfo);
+        var disp = _connectableObservable.Connect();
+
+        return Disposable.Create(() =>
         {
-            _connectableObservable = parent;
-        }
-
-        public IDisposable Connect()
-        {
-            var connectionId = Session.OnConnected(OperatorInfo);
-            var disp = _connectableObservable.Connect();
-
-            return Disposable.Create(() =>
-            {
-                disp.Dispose();
-                Session.OnDisconnected(Event.Disconnect(connectionId));
-            });
-        }
+            disp.Dispose();
+            Session.OnDisconnected(EventFactory.Disconnect(connectionId));
+        });
     }
 }

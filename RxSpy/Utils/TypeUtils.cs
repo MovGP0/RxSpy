@@ -10,8 +10,9 @@ namespace RxSpy.Utils
 {
     public static class TypeUtils
     {
-        static Dictionary<Type, string> csFriendlyTypeNames;
-        readonly static ConcurrentDictionary<Type, Lazy<string>> _typeNameCache =
+        private static Dictionary<Type, string> csFriendlyTypeNames;
+
+        private readonly static ConcurrentDictionary<Type, Lazy<string>> _typeNameCache =
             new ConcurrentDictionary<Type, Lazy<string>>();
 
         static TypeUtils()
@@ -44,7 +45,7 @@ namespace RxSpy.Utils
             return lazy.Value;
         }
 
-        static string toFriendlyNameImpl(Type type)
+        private static string toFriendlyNameImpl(Type type)
         {
             if (type.IsGenericType)
             {

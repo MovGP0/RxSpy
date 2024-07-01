@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using QuickGraph;
-using RxSpy.Models;
 
 namespace RxSpy.ViewModels.Graphs
 {

@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RxSpy.Protobuf.Events;
 
-namespace RxSpy.Observables
+namespace RxSpy.Observables;
+
+public interface IOperatorObservable
 {
-    public interface IOperatorObservable
-    {
-        OperatorInfo OperatorInfo { get; }
-    }
+    OperatorInfo OperatorInfo { get; }
 }

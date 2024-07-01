@@ -1,54 +1,53 @@
-﻿using System;
-using System.Reactive.Disposables;
+﻿using System.Reactive.Disposables;
 using RxSpy.Events;
+using RxSpy.Protobuf.Events;
 
-namespace RxSpy.Observables
+namespace RxSpy.Observables;
+
+internal class OperatorConnection<T> : IObservable<T>, IConnection
 {
-    internal class OperatorConnection<T> : IObservable<T>, IOperatorObservable, IConnection
+    private IObservable<T> _parent;
+    private OperatorInfo? _parentInfo;
+
+    public OperatorInfo OperatorInfo { get; }
+
+    protected RxSpySession Session { get; }
+
+    public OperatorConnection(
+        RxSpySession session,
+        IObservable<T> parent,
+        OperatorInfo childInfo)
     {
-        readonly OperatorInfo _childInfo;
-        private IObservable<T> _parent;
-        private OperatorInfo _parentInfo;
-        private RxSpySession _session;
+        Session = session;
+        _parent = parent;
 
-        public OperatorInfo OperatorInfo { get { return _childInfo; } }
-        protected RxSpySession Session { get { return _session; } }
+        if (parent is IOperatorObservable operatorObservable)
+            _parentInfo = operatorObservable.OperatorInfo;
 
-        public OperatorConnection(RxSpySession session, IObservable<T> parent, OperatorInfo childInfo)
+        OperatorInfo = childInfo;
+    }
+
+    public override string ToString()
+    {
+        return OperatorInfo + "::Connection";
+    }
+
+    public virtual IDisposable Subscribe(IObserver<T> observer)
+    {
+        // Parent is not a tracked observable.
+        if (_parentInfo == null)
         {
-            _session = session;
-            _parent = parent;
-
-            var oobs = parent as IOperatorObservable;
-
-            if (oobs != null)
-                _parentInfo = oobs.OperatorInfo;
-
-            _childInfo = childInfo;
+            return _parent.Subscribe(observer);
         }
 
-        public override string ToString()
+        var subscriptionId = Session.OnSubscribe(OperatorInfo, _parentInfo);
+
+        var disp = _parent.Subscribe(observer);
+
+        return Disposable.Create(() =>
         {
-            return _childInfo.ToString() + "::Connection";
-        }
-
-        public virtual IDisposable Subscribe(IObserver<T> observer)
-        {
-            // Parent is not a tracked observable.
-            if (_parentInfo == null)
-            {
-                return _parent.Subscribe(observer);
-            }
-
-            var subscriptionId = _session.OnSubscribe(_childInfo, _parentInfo);
-
-            var disp = _parent.Subscribe(observer);
-
-            return Disposable.Create(() =>
-            {
-                disp.Dispose();
-                _session.OnUnsubscribe(subscriptionId);
-            });
-        }
+            disp.Dispose();
+            Session.OnUnsubscribe(subscriptionId);
+        });
     }
 }

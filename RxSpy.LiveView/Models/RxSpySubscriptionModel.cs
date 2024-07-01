@@ -1,48 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ReactiveUI;
-using RxSpy.Events;
+﻿using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
+using RxSpy.Protobuf.Events;
 
-namespace RxSpy.Models
+namespace RxSpy.Models;
+
+public class RxSpySubscriptionModel: ReactiveObject
 {
-    public class RxSpySubscriptionModel: ReactiveObject
+    [Reactive]
+    public long SubscriptionId { get; set; }
+
+    [Reactive]
+    public RxSpyObservableModel Parent { get; set; }
+
+    [Reactive]
+    public RxSpyObservableModel Child { get; set; }
+
+    [Reactive]
+    public bool IsActive { get; set; }
+
+    [Reactive]
+    public TimeSpan Created { get; set; }
+
+    public RxSpySubscriptionModel(
+        SubscribeEvent subscribeEvent,
+        RxSpyObservableModel child,
+        RxSpyObservableModel parent)
     {
-        public long SubscriptionId { get; set; }
-
-        RxSpyObservableModel _parent;
-        public RxSpyObservableModel Parent
-        {
-            get { return _parent; }
-            set { this.RaiseAndSetIfChanged(ref _parent, value); }
-        }
-
-        RxSpyObservableModel _child;
-        public RxSpyObservableModel Child
-        {
-            get { return _child; }
-            set { this.RaiseAndSetIfChanged(ref _child, value); }
-        }
-
-        bool _isActive;
-        public bool IsActive
-        {
-            get { return _isActive; }
-            set { this.RaiseAndSetIfChanged(ref _isActive, value); }
-        }
-
-        public TimeSpan Created { get; set; }
-
-        public RxSpySubscriptionModel(ISubscribeEvent subscribeEvent, RxSpyObservableModel child, RxSpyObservableModel parent)
-        {
-            SubscriptionId = subscribeEvent.EventId;
-            Parent = parent;
-            Child = child;
-            IsActive = true;
-            Created = TimeSpan.FromMilliseconds(subscribeEvent.EventTime);
-        }
-
+        SubscriptionId = subscribeEvent.BaseEvent.EventId;
+        Parent = parent;
+        Child = child;
+        IsActive = true;
+        Created = subscribeEvent.BaseEvent.EventTime.ToTimeSpan();
     }
 }

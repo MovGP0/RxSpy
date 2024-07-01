@@ -1,25 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using RxSpy.Events;
+﻿using RxSpy.Protobuf.Events;
 
-namespace RxSpy.Models
+namespace RxSpy.Models;
+
+public class RxSpyErrorModel
 {
-    public class RxSpyErrorModel
+    public TypeInfo ErrorType { get; set; }
+    public string Message { get; set; }
+    public TimeSpan Received { get; set; }
+    public string StackTrace { get; set; }
+
+    public RxSpyErrorModel(OnErrorEvent onErrorEvent)
     {
-        public ITypeInfo ErrorType { get; set; }
-        public string Message { get; set; }
-        public TimeSpan Received { get; set; }
-        public string StackTrace { get; set; }
-
-        public RxSpyErrorModel(IOnErrorEvent onErrorEvent)
-        {
-            Received = TimeSpan.FromMilliseconds(onErrorEvent.EventTime);
-            ErrorType = onErrorEvent.ErrorType;
-            Message = onErrorEvent.Message;
-            StackTrace = onErrorEvent.StackTrace;
-        }
-
+        Received = onErrorEvent.BaseEvent.EventTime.ToTimeSpan();
+        ErrorType = onErrorEvent.ErrorType;
+        Message = onErrorEvent.Message;
+        StackTrace = onErrorEvent.StackTrace;
     }
 }

@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI" 
+             xmlns:rx="clr-namespace:ReactiveUI;assembly=ReactiveUI"
+             xmlns:reactiveUi="http://reactiveui.net"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <TabControl>
@@ -19,10 +20,10 @@
             </DataGrid>
         </TabItem>
         <TabItem Header="Parents">
-            <rx:ViewModelViewHost x:Name="parentsView" />
+            <reactiveUi:ViewModelViewHost x:Name="parentsView" />
         </TabItem>
         <TabItem Header="Children">
-            <rx:ViewModelViewHost x:Name="childrenView" />
+            <reactiveUi:ViewModelViewHost x:Name="childrenView" />
         </TabItem>
         <TabItem x:Name="errorTab" Header="Errors">
             <TextBox IsReadOnly="True" x:Name="errorText" />

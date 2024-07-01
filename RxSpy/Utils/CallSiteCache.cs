@@ -1,121 +1,116 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Threading;
 using RxSpy.Events;
-using bcl = System.Reflection;
+using System.Reflection;
+using RxSpy.Protobuf.Events;
 
-namespace RxSpy.Utils
+namespace RxSpy.Utils;
+
+public static class CallSiteCache
 {
-    public static class CallSiteCache
+    private readonly static GetStackFrameInfo _stackFrameFast;
+
+    private readonly static ConcurrentDictionary<Tuple<IntPtr, int>, CallSite> _cache = new();
+
+    private delegate Tuple<IntPtr, int> GetStackFrameInfo(int skipFrames);
+
+    static CallSiteCache()
     {
-        readonly static GetStackFrameInfo _stackFrameFast;
-
-        readonly static ConcurrentDictionary<Tuple<IntPtr, int>, CallSite> _cache =
-            new ConcurrentDictionary<Tuple<IntPtr, int>, CallSite>();
-
-        delegate Tuple<IntPtr, int> GetStackFrameInfo(int skipFrames);
-
-        static CallSiteCache()
+        try
         {
-            try
-            {
-                _stackFrameFast = CreateInternalStackFrameInfoMethod();
-            }
-            catch (Exception exc)
-            {
-                Debug.WriteLine("Could not create fast stack info method, things are going to get slooooow. Exception: " + exc);
-
-                // If we end up here it's bad, the .NET framework authors has changed the private implementation that 
-                // we rely on (which is entirely within their rights to do).
-                if (Debugger.IsAttached)
-                    Debugger.Break();
-            }
+            _stackFrameFast = CreateInternalStackFrameInfoMethod();
         }
-
-        static GetStackFrameInfo CreateInternalStackFrameInfoMethod()
+        catch (Exception exc)
         {
-            var mscorlib = typeof(object).Assembly;
+            Debug.WriteLine("Could not create fast stack info method, things are going to get slooooow. Exception: " + exc);
 
-            var sfhType = mscorlib.GetType("System.Diagnostics.StackFrameHelper");
-            var sfhCtor = sfhType.GetConstructor(new Type[] { typeof(bool), typeof(Thread) });
-            var sfhRgMethodHandle = sfhType.GetField("rgMethodHandle", bcl.BindingFlags.NonPublic | bcl.BindingFlags.Instance);
-            var sfhRgiILOffsetField = sfhType.GetField("rgiILOffset", bcl.BindingFlags.NonPublic | bcl.BindingFlags.Instance);
+            // If we end up here it's bad, the .NET framework authors has changed the private implementation that 
+            // we rely on (which is entirely within their rights to do).
+            if (Debugger.IsAttached)
+                Debugger.Break();
+        }
+    }
 
-            var sfhGetMethodBaseMethod = sfhType.GetMethod("GetMethodBase",
-                bcl.BindingFlags.Instance | bcl.BindingFlags.Public);
+    private static GetStackFrameInfo CreateInternalStackFrameInfoMethod()
+    {
+        var mscorlib = typeof(object).Assembly;
 
-            var getStackFramesInternalMethod = typeof(StackTrace).GetMethod("GetStackFramesInternal",
-                bcl.BindingFlags.Static | bcl.BindingFlags.NonPublic);
+        var sfhType = mscorlib.GetType("System.Diagnostics.StackFrameHelper");
+        var sfhCtor = sfhType.GetConstructor(new Type[] { typeof(bool), typeof(Thread) });
+        var sfhRgMethodHandle = sfhType.GetField("rgMethodHandle", BindingFlags.NonPublic | BindingFlags.Instance);
+        var sfhRgiILOffsetField = sfhType.GetField("rgiILOffset", BindingFlags.NonPublic | BindingFlags.Instance);
 
-            var calculateFramesToSkipMethod = typeof(StackTrace).GetMethod("CalculateFramesToSkip",
-                bcl.BindingFlags.Static | bcl.BindingFlags.NonPublic);
+        var sfhGetMethodBaseMethod = sfhType.GetMethod("GetMethodBase",
+            BindingFlags.Instance | BindingFlags.Public);
 
-            var currentThreadProperty = typeof(Thread).GetProperty("CurrentThread");
-            var tupleCtor = typeof(Tuple<IntPtr, int>).GetConstructor(new Type[] { typeof(IntPtr), typeof(int) });
+        var getStackFramesInternalMethod = typeof(StackTrace).GetMethod("GetStackFramesInternal",
+            BindingFlags.Static | BindingFlags.NonPublic);
 
-            var skipParam = Expression.Parameter(typeof(int), "iSkip");
-            var sfhVariable = Expression.Variable(sfhType, "sfh");
-            var actualSkip = Expression.Variable(typeof(int), "iNumFrames");
+        var calculateFramesToSkipMethod = typeof(StackTrace).GetMethod("CalculateFramesToSkip",
+            BindingFlags.Static | BindingFlags.NonPublic);
 
-            var zero = Expression.Constant(0, typeof(int));
+        var currentThreadProperty = typeof(Thread).GetProperty("CurrentThread");
+        var tupleCtor = typeof(Tuple<IntPtr, int>).GetConstructor(new Type[] { typeof(IntPtr), typeof(int) });
 
-            var methodLambda = Expression.Lambda<GetStackFrameInfo>(
-                Expression.Block(
-                    new[] { sfhVariable },
+        var skipParam = Expression.Parameter(typeof(int), "iSkip");
+        var sfhVariable = Expression.Variable(sfhType, "sfh");
+        var actualSkip = Expression.Variable(typeof(int), "iNumFrames");
 
-                    Expression.Assign(
-                        sfhVariable,
-                        Expression.New(sfhCtor,
-                            Expression.Constant(false, typeof(bool)), // fNeedFileLineColInfo
-                            Expression.Constant(null, typeof(Thread)) // target (thread)
-                        )
-                    ),
+        var zero = Expression.Constant(0, typeof(int));
 
-                    Expression.Call(getStackFramesInternalMethod, sfhVariable, zero, Expression.Constant(null, typeof(Exception))),
+        var methodLambda = Expression.Lambda<GetStackFrameInfo>(
+            Expression.Block(
+                new[] { sfhVariable },
 
-                    Expression.New(tupleCtor,
-                        Expression.ArrayIndex(Expression.Field(sfhVariable, sfhRgMethodHandle), skipParam),
-                        Expression.ArrayIndex(Expression.Field(sfhVariable, sfhRgiILOffsetField), skipParam)
+                Expression.Assign(
+                    sfhVariable,
+                    Expression.New(sfhCtor,
+                        Expression.Constant(false, typeof(bool)), // fNeedFileLineColInfo
+                        Expression.Constant(null, typeof(Thread)) // target (thread)
                     )
                 ),
-                skipParam
-            ).Compile();
 
-            return methodLambda;
-        }
+                Expression.Call(getStackFramesInternalMethod, sfhVariable, zero, Expression.Constant(null, typeof(Exception))),
 
-        public static CallSite Get(int skipFrames)
+                Expression.New(tupleCtor,
+                    Expression.ArrayIndex(Expression.Field(sfhVariable, sfhRgMethodHandle), skipParam),
+                    Expression.ArrayIndex(Expression.Field(sfhVariable, sfhRgiILOffsetField), skipParam)
+                )
+            ),
+            skipParam
+        ).Compile();
+
+        return methodLambda;
+    }
+
+    public static CallSite Get(int skipFrames)
+    {
+        // Account for ourselves
+        skipFrames++;
+
+        if (_stackFrameFast == null)
         {
-            // Account for ourselves
-            skipFrames++;
+            // This is terribad, this session is going to be soooo sloooooooooooow.
+            // This will eventually happen when the .NET framework authors
+            // excercise their right to change the private implementation we're
+            // depending on.
+            // Fall back to expensive full frame
 
-            if (_stackFrameFast == null)
-            {
-                // This is terribad, this session is going to be soooo sloooooooooooow.
-                // This will eventually happen when the .NET framework authors
-                // excercise their right to change the private implementation we're
-                // depending on.
-                // Fall back to expensive full frame
-
-                return new CallSite(new StackFrame(skipFrames, true));
-            }
-            
-            // Don't exactly know why we need to skip 2 and not 1 here. 
-            // I suspect expression tree trickery.
-            var key = _stackFrameFast(skipFrames + 2);
-
-            CallSite cached;
-
-            if (_cache.TryGetValue(key, out cached))
-                return cached;
-
-            var frame = new StackFrame(skipFrames, true);
-
-            var callSite = new CallSite(frame);
-
-            return _cache.GetOrAdd(key, callSite);
+            return CallSiteFactory.Create(new StackFrame(skipFrames, true));
         }
+
+        // Don't exactly know why we need to skip 2 and not 1 here. 
+        // I suspect expression tree trickery.
+        var key = _stackFrameFast(skipFrames + 2);
+
+        if (_cache.TryGetValue(key, out var cached))
+            return cached;
+
+        var frame = new StackFrame(skipFrames, true);
+
+        var callSite = CallSiteFactory.Create(frame);
+
+        return _cache.GetOrAdd(key, callSite);
     }
 }

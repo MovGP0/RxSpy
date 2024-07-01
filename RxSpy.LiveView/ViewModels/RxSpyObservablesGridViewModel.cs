@@ -1,33 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-using ReactiveUI;
+﻿using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using RxSpy.Models;
 
-namespace RxSpy.ViewModels
+namespace RxSpy.ViewModels;
+
+public class RxSpyObservablesGridViewModel : ReactiveObject
 {
-    public class RxSpyObservablesGridViewModel : ReactiveObject
+    [Reactive]
+    public IReactiveDerivedList<RxSpyObservableGridItemViewModel> Observables { get; set; }
+
+    [Reactive]
+    public RxSpyObservableGridItemViewModel SelectedItem { get; set; }
+
+    public RxSpyObservablesGridViewModel(IReadOnlyReactiveList<RxSpyObservableModel> model)
     {
-        IReactiveDerivedList<RxSpyObservableGridItemViewModel> _observables;
-        public IReactiveDerivedList<RxSpyObservableGridItemViewModel> Observables
-        {
-            get { return _observables; }
-            set { this.RaiseAndSetIfChanged(ref _observables, value); }
-        }
-
-        RxSpyObservableGridItemViewModel _selectedItem;
-        public RxSpyObservableGridItemViewModel SelectedItem
-        {
-            get { return _selectedItem; }
-            set { this.RaiseAndSetIfChanged(ref _selectedItem, value); }
-        }
-
-        public RxSpyObservablesGridViewModel(IReadOnlyReactiveList<RxSpyObservableModel> model)
-        {
-            Observables = model.CreateDerivedCollection(x => new RxSpyObservableGridItemViewModel(x));
-        }
+        Observables = model.CreateDerivedCollection(x => new RxSpyObservableGridItemViewModel(x));
     }
 }

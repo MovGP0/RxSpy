@@ -3,13 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{AD3DF912-0232-495D-9542-172C1B5AEB18}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.StressTest", "RxSpy.StressTest\RxSpy.StressTest.csproj", "{AEDF8197-4672-45B8-B152-131C11439D90}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.TestConsole", "RxSpy.TestConsole\RxSpy.TestConsole.csproj", "{C50D2810-7AE0-435E-B0DF-245820F26D08}"
@@ -21,6 +14,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Protos", "Protos", "{440EA6A5-6BF2-4878-AFDC-24C246BE8A7F}"
 	ProjectSection(SolutionItems) = preProject
 		Protos\RxSpy.Models.Events.proto = Protos\RxSpy.Models.Events.proto
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{551D5F74-F794-4338-B26A-8224FA07B279}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		Readme.md = Readme.md
 	EndProjectSection
 EndProject
 Global

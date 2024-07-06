@@ -13,7 +13,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RxSpy.AspNet\RxSpy.AspNet.csproj" />
     <ProjectReference Include="..\RxSpy.Grpc\RxSpy.Grpc.csproj" />
     <ProjectReference Include="..\RxSpy\RxSpy.csproj" />
   </ItemGroup>

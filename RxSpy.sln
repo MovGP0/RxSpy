@@ -5,7 +5,7 @@ VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.StressTest", "RxSpy.StressTest\RxSpy.StressTest.csproj", "{AEDF8197-4672-45B8-B152-131C11439D90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.TestConsole", "RxSpy.TestConsole\RxSpy.TestConsole.csproj", "{C50D2810-7AE0-435E-B0DF-245820F26D08}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.Grpc.TestConsole", "RxSpy.Grpc.TestConsole\RxSpy.Grpc.TestConsole.csproj", "{C50D2810-7AE0-435E-B0DF-245820F26D08}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.LiveView", "RxSpy.LiveView\RxSpy.LiveView.csproj", "{D7E752E7-411A-413B-B27D-482C653C45DC}"
 EndProject
@@ -31,6 +31,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.Grpc", "RxSpy.Grpc\RxSpy.Grpc.csproj", "{6637CFD3-5562-428A-BC38-EE0EEDAB1763}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.Streaming", "RxSpy.Streaming\RxSpy.Streaming.csproj", "{E75EA708-D815-4491-826B-9308EA7F8965}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.AspNet.TestConsole", "RxSpy.AspNet.TestConsole\RxSpy.AspNet.TestConsole.csproj", "{132348F8-2F75-4799-854F-F976E79F4337}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +68,10 @@ Global
 		{E75EA708-D815-4491-826B-9308EA7F8965}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E75EA708-D815-4491-826B-9308EA7F8965}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E75EA708-D815-4491-826B-9308EA7F8965}.Release|Any CPU.Build.0 = Release|Any CPU
+		{132348F8-2F75-4799-854F-F976E79F4337}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{132348F8-2F75-4799-854F-F976E79F4337}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{132348F8-2F75-4799-854F-F976E79F4337}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{132348F8-2F75-4799-854F-F976E79F4337}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,5 +80,6 @@ Global
 		{AEDF8197-4672-45B8-B152-131C11439D90} = {223E876F-3211-4B67-AC15-FB520EC860A9}
 		{C50D2810-7AE0-435E-B0DF-245820F26D08} = {223E876F-3211-4B67-AC15-FB520EC860A9}
 		{D7E752E7-411A-413B-B27D-482C653C45DC} = {223E876F-3211-4B67-AC15-FB520EC860A9}
+		{132348F8-2F75-4799-854F-F976E79F4337} = {223E876F-3211-4B67-AC15-FB520EC860A9}
 	EndGlobalSection
 EndGlobal

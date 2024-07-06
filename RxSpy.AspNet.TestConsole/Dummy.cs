@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace RxSpy.TestConsole;
+namespace RxSpy.AspNet.TestConsole;
 
 [DebuggerDisplay("{foo,nq}")]
 internal sealed class Dummy

@@ -1,11 +1,12 @@
 using System.Net;
 using System.Net.Sockets;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore;
-using RxSpy.AspNet;
-using RxSpy.Grpc;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace RxSpy.TestConsole;
+namespace RxSpy.AspNet.TestConsole;
 
 public static class HostCreator
 {
@@ -25,32 +26,28 @@ public static class HostCreator
 
         host.Configure(app =>
         {
-            app.UseCors(CorsPolicyName.TOKEN_LOCAL_HOST_RGPC);
+            app.UseCors(CorsPolicyName.TOKEN_LOCAL_HOST_HTTP);
             app.UseRouting();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapGrpcService<RxSpyGrpcService>();
-            });
+            app.UseRxSpy();
         });
 
         host.ConfigureServices(services =>
         {
-            services.AddGrpc();
+            services.AddRxSpy();
             services.AddRouting();
             services.AddCors(corsOptions =>
             {
-                corsOptions.AddPolicy(name: CorsPolicyName.TOKEN_LOCAL_HOST_RGPC,
+                corsOptions.AddPolicy(name: CorsPolicyName.TOKEN_LOCAL_HOST_HTTP,
                     policy =>
                     {
                         policy
                             .WithOrigins("localhost")
                             .AllowAnyMethod()
-                            .AllowAnyHeader()
-                            .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding");
+                            .AllowAnyHeader();
                     });
             });
 
-            services.AddSingleton<IRxSpyEventHandler, RxSpyHttpEventHandler>();
+            
         });
 
         return host.Build();

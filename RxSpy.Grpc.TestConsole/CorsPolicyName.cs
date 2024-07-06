@@ -1,4 +1,4 @@
-namespace RxSpy.TestConsole;
+namespace RxSpy.Grpc.TestConsole;
 
 public static class CorsPolicyName
 {

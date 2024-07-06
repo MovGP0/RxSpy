@@ -1,6 +1,6 @@
-﻿using RxSpy.Protobuf.Events;
+﻿using RxSpy.Entities;
 
-namespace RxSpy.Events;
+namespace RxSpy.Factories;
 
 public static class TypeInfoFactory
 {

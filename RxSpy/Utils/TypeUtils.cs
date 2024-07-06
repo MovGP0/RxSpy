@@ -1,51 +1,45 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 
 namespace RxSpy.Utils
 {
     public static class TypeUtils
     {
-        private static Dictionary<Type, string> csFriendlyTypeNames;
+        private static readonly Dictionary<Type, string> CsFriendlyTypeNames;
 
-        private readonly static ConcurrentDictionary<Type, Lazy<string>> _typeNameCache =
-            new ConcurrentDictionary<Type, Lazy<string>>();
+        private static readonly ConcurrentDictionary<Type, Lazy<string>> TypeNameCache = new();
 
         static TypeUtils()
         {
-            csFriendlyTypeNames = new Dictionary<Type, string>();
-
-            csFriendlyTypeNames.Add(typeof(sbyte), "sbyte");
-            csFriendlyTypeNames.Add(typeof(byte), "byte");
-            csFriendlyTypeNames.Add(typeof(short), "short");
-            csFriendlyTypeNames.Add(typeof(ushort), "ushort");
-            csFriendlyTypeNames.Add(typeof(int), "int");
-            csFriendlyTypeNames.Add(typeof(uint), "uint");
-            csFriendlyTypeNames.Add(typeof(long), "long");
-            csFriendlyTypeNames.Add(typeof(ulong), "ulong");
-            csFriendlyTypeNames.Add(typeof(float), "float");
-            csFriendlyTypeNames.Add(typeof(double), "double");
-            csFriendlyTypeNames.Add(typeof(bool), "bool");
-            csFriendlyTypeNames.Add(typeof(char), "char");
-            csFriendlyTypeNames.Add(typeof(string), "string");
-            csFriendlyTypeNames.Add(typeof(object), "object");
-            csFriendlyTypeNames.Add(typeof(decimal), "decimal");
+            CsFriendlyTypeNames = new Dictionary<Type, string>
+            {
+                { typeof(sbyte), "sbyte" },
+                { typeof(byte), "byte" },
+                { typeof(short), "short" },
+                { typeof(ushort), "ushort" },
+                { typeof(int), "int" },
+                { typeof(uint), "uint" },
+                { typeof(long), "long" },
+                { typeof(ulong), "ulong" },
+                { typeof(float), "float" },
+                { typeof(double), "double" },
+                { typeof(bool), "bool" },
+                { typeof(char), "char" },
+                { typeof(string), "string" },
+                { typeof(object), "object" },
+                { typeof(decimal), "decimal" }
+            };
         }
 
         public static string ToFriendlyName(Type type)
         {
-            var lazy = _typeNameCache.GetOrAdd(type, _ => new Lazy<string>(
-                    () => toFriendlyNameImpl(type),
+            var lazy = TypeNameCache.GetOrAdd(type, _ => new Lazy<string>(
+                    () => ToFriendlyNameImpl(type),
                     LazyThreadSafetyMode.ExecutionAndPublication));
 
             return lazy.Value;
         }
 
-        private static string toFriendlyNameImpl(Type type)
+        private static string ToFriendlyNameImpl(Type type)
         {
             if (type.IsGenericType)
             {
@@ -53,25 +47,20 @@ namespace RxSpy.Utils
                 {
                     return ToFriendlyName(type.GetGenericArguments()[0]) + "?";
                 }
-                else
-                {
-                    var definition = type.GetGenericTypeDefinition();
 
-                    return GetNameWithoutGenerics(definition) + "<" + string.Join(", ", type.GetGenericArguments().Select(ToFriendlyName)) + ">";
-                }
+                var definition = type.GetGenericTypeDefinition();
+                return GetNameWithoutGenerics(definition) + "<" + string.Join(", ", type.GetGenericArguments().Select(ToFriendlyName)) + ">";
             }
 
             if (type.IsArray)
             {
-                return ToFriendlyName(type.GetElementType()) + Repeat("[]", type.GetArrayRank());
+                var elementType = type.GetElementType() ?? typeof(object);
+                return ToFriendlyName(elementType) + Repeat("[]", type.GetArrayRank());
             }
 
-            string name;
-
-            if (csFriendlyTypeNames.TryGetValue(type, out name))
-                return name;
-
-            return type.Name;
+            return CsFriendlyTypeNames.TryGetValue(type, out var name)
+                ? name
+                : type.Name;
         }
 
         private static string GetNameWithoutGenerics(Type definition)
@@ -79,21 +68,24 @@ namespace RxSpy.Utils
             var n = definition.Name;
             var p = n.IndexOf('`');
 
-            if (p == -1)
-                return n;
-
-            return n.Substring(0, p);
+            return p == -1
+                ? n
+                : n[..p];
         }
 
         private static string Repeat(string str, int count)
         {
             if (count == 1)
+            {
                 return str;
+            }
 
             var arr = new string[count];
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
+            {
                 arr[i] = str;
+            }
 
             return string.Concat(arr);
         }

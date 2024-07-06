@@ -1,4 +1,4 @@
-﻿using RxSpy.Protobuf.Events;
+﻿using RxSpy.Events;
 
 namespace RxSpy.StressTest;
 
@@ -78,6 +78,9 @@ public sealed class StressTestEventHandler: IRxSpyEventHandler
 
     public void Dispose()
     {
-        _inner.Dispose();
+        if (_inner is IDisposable innerDisposable)
+        {
+            innerDisposable.Dispose();
+        }
     }
 }

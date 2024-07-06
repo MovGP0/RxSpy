@@ -12,6 +12,7 @@
     <PackageReference Include="System.Reactive.PlatformServices" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RxSpy.Streaming\RxSpy.Streaming.csproj" />
     <ProjectReference Include="..\RxSpy\RxSpy.csproj" />
   </ItemGroup>
 </Project>

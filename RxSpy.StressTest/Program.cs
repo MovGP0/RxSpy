@@ -4,6 +4,7 @@ using System.Reactive.Threading.Tasks;
 using System.Reactive.Concurrency;
 using System.Reactive;
 using System.Reactive.Subjects;
+using RxSpy.Streaming;
 
 namespace RxSpy.StressTest;
 

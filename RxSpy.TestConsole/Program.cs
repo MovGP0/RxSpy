@@ -1,6 +1,5 @@
 ﻿using System.Reactive.Linq;
 using Microsoft.Extensions.DependencyInjection;
-using RxSpy.Communication;
 
 namespace RxSpy.TestConsole;
 
@@ -12,8 +11,8 @@ internal static class Program
         await host.StartAsync();
         try
         {
-            var service = host.Services.GetRequiredService<RxSpyGrpcService>();
-            using var session = RxSpySession.Launch(service);
+            var rxSpyEventHandler = host.Services.GetRequiredService<IRxSpyEventHandler>();
+            using var session = RxSpySession.Launch(rxSpyEventHandler);
 
             var dummy = new[] { "Foo", "Bar", "Baz" };
 

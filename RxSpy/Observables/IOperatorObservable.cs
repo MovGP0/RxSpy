@@ -1,4 +1,4 @@
-﻿using RxSpy.Protobuf.Events;
+﻿using RxSpy.Entities;
 
 namespace RxSpy.Observables;
 

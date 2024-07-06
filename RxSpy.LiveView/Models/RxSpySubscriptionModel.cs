@@ -26,10 +26,10 @@ public class RxSpySubscriptionModel: ReactiveObject
         RxSpyObservableModel child,
         RxSpyObservableModel parent)
     {
-        SubscriptionId = subscribeEvent.BaseEvent.EventId;
+        SubscriptionId = subscribeEvent.EventId;
         Parent = parent;
         Child = child;
         IsActive = true;
-        Created = subscribeEvent.BaseEvent.EventTime.ToTimeSpan();
+        Created = subscribeEvent.EventTime.ToTimeSpan();
     }
 }

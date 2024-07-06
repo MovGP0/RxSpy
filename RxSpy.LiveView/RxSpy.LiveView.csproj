@@ -14,9 +14,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
     <PackageReference Include="GraphSharp" Version="1.1.0" />
     <PackageReference Include="QuickGraph" Version="3.6.61119.7" />
-    <PackageReference Include="ReactiveList" Version="2.0.2" />
     <PackageReference Include="ReactiveUI" Version="20.1.1" />
     <PackageReference Include="ReactiveUI.WPF" Version="20.1.1" />
     <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
@@ -25,5 +25,8 @@
   </ItemGroup>
   <ItemGroup>
     <Protobuf Include="..\Protos\RxSpy.Models.Events.proto" GrpcServices="Server" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="FodyWeavers.xml" />
   </ItemGroup>
 </Project>

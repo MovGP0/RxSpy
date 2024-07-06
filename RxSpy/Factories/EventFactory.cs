@@ -1,10 +1,10 @@
 ﻿using freakcode.frequency;
-using Google.Protobuf.WellKnownTypes;
-using RxSpy.Protobuf.Events;
+using RxSpy.Entities;
+using RxSpy.Events;
 using RxSpy.Utils;
 using Type = System.Type;
 
-namespace RxSpy.Events;
+namespace RxSpy.Factories;
 
 internal abstract class EventFactory
 {
@@ -14,7 +14,8 @@ internal abstract class EventFactory
     {
         return new()
         {
-            BaseEvent = GetBaseEvent(EventType.OperatorCreated),
+            EventId = Interlocked.Increment(ref _counter),
+            EventTime = Monotonic.Time(),
             CallSite = operatorInfo.CallSite,
             Id = operatorInfo.Id,
             Name = operatorInfo.Name,
@@ -22,12 +23,13 @@ internal abstract class EventFactory
         };
     }
 
-    public static OnNextEvent OnNext(OperatorInfo operatorInfo, Type valueType, object value)
+    public static OnNextEvent OnNext(OperatorInfo operatorInfo, Type valueType, object? value)
     {
         return new()
         {
+            EventId = Interlocked.Increment(ref _counter),
+            EventTime = Monotonic.Time(),
             OperatorId = operatorInfo.Id,
-            BaseEvent = GetBaseEvent(EventType.OnNext),
             Thread = Thread.CurrentThread.ManagedThreadId,
             Value = ValueFormatter.ToString(value, valueType),
             ValueType = TypeUtils.ToFriendlyName(valueType)
@@ -40,18 +42,20 @@ internal abstract class EventFactory
         {
             return new()
             {
-                OperatorId = operatorInfo.Id,
-                BaseEvent = GetBaseEvent(EventType.OnError)
+                EventId = Interlocked.Increment(ref _counter),
+                EventTime = Monotonic.Time(),
+                OperatorId = operatorInfo.Id
             };
         }
 
         return new()
         {
+            EventId = Interlocked.Increment(ref _counter),
+            EventTime = Monotonic.Time(),
             OperatorId = operatorInfo.Id,
             ErrorType = TypeInfoFactory.Create(error.GetType()),
             Message = error.Message,
-            StackTrace = error.StackTrace,
-            BaseEvent = GetBaseEvent(EventType.OnError)
+            StackTrace = error.StackTrace
         };
     }
 
@@ -59,33 +63,20 @@ internal abstract class EventFactory
     {
         return new()
         {
-            OperatorId = operatorInfo.Id,
-            BaseEvent = GetBaseEvent(EventType.OnCompleted)
+            EventId = Interlocked.Increment(ref _counter),
+            EventTime = Monotonic.Time(),
+            OperatorId = operatorInfo.Id
         };
     }
 
-    private static Event GetBaseEvent(EventType eventType)
-    {
-        var timeInMilliseconds = Monotonic.Time();
-        return new()
-        {
-            EventType = eventType,
-            EventTime = new()
-            {
-                Seconds = timeInMilliseconds / 1000L,
-                Nanos = (int) (timeInMilliseconds % 1000L) * 1_000
-            },
-            EventId = Interlocked.Increment(ref _counter)
-        };
-    }
-
-    internal static SubscribeEvent Subscribe(OperatorInfo child, OperatorInfo parent)
+    internal static SubscribeEvent Subscribe(OperatorInfo observer, OperatorInfo source)
     {
         return new()
         {
-            ChildId = child.Id,
-            ParentId = parent.Id,
-            BaseEvent = GetBaseEvent(EventType.Subscribe)
+            EventId = Interlocked.Increment(ref _counter),
+            EventTime = Monotonic.Time(),
+            ChildId = observer.Id,
+            ParentId = source.Id
         };
     }
 
@@ -93,8 +84,9 @@ internal abstract class EventFactory
     {
         return new()
         {
-            SubscriptionId = subscriptionId,
-            BaseEvent = GetBaseEvent(EventType.Unsubscribe)
+            EventId = Interlocked.Increment(ref _counter),
+            EventTime = Monotonic.Time(),
+            SubscriptionId = subscriptionId
         };
     }
 
@@ -102,7 +94,8 @@ internal abstract class EventFactory
     {
         return new()
         {
-            BaseEvent = GetBaseEvent(EventType.TagOperator),
+            EventId = Interlocked.Increment(ref _counter),
+            EventTime = Monotonic.Time(),
             OperatorId = operatorInfo.Id,
             Tag = tag
         };
@@ -112,8 +105,9 @@ internal abstract class EventFactory
     {
         return new()
         {
-            OperatorId = operatorInfo.Id,
-            BaseEvent = GetBaseEvent(EventType.Connected)
+            EventId = Interlocked.Increment(ref _counter),
+            EventTime = Monotonic.Time(),
+            OperatorId = operatorInfo.Id
         };
     }
 
@@ -121,8 +115,9 @@ internal abstract class EventFactory
     {
         return new()
         {
-            ConnectionId = connectionId,
-            BaseEvent = GetBaseEvent(EventType.Disconnected)
+            EventId = Interlocked.Increment(ref _counter),
+            EventTime = Monotonic.Time(),
+            ConnectionId = connectionId
         };
     }
 }

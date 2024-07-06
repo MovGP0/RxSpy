@@ -11,7 +11,7 @@ public class RxSpyErrorModel
 
     public RxSpyErrorModel(OnErrorEvent onErrorEvent)
     {
-        Received = onErrorEvent.BaseEvent.EventTime.ToTimeSpan();
+        Received = onErrorEvent.EventTime.ToTimeSpan();
         ErrorType = onErrorEvent.ErrorType;
         Message = onErrorEvent.Message;
         StackTrace = onErrorEvent.StackTrace;

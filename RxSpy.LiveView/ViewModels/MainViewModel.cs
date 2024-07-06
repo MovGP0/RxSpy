@@ -1,6 +1,7 @@
 ﻿using ReactiveUI;
 using RxSpy.Models;
 using System.Reactive.Linq;
+using DynamicData.Binding;
 using ReactiveUI.Fody.Helpers;
 
 namespace RxSpy.ViewModels;
@@ -9,8 +10,8 @@ public class MainViewModel : ReactiveObject
 {
     public RxSpySessionModel Model { get; set; }
 
-    readonly ObservableAsPropertyHelper<IReadOnlyReactiveList<RxSpyObservableModel>> _trackedObservables;
-    public IReadOnlyReactiveList<RxSpyObservableModel> TrackedObservables => _trackedObservables.Value;
+    readonly ObservableAsPropertyHelper<IObservableCollection<RxSpyObservableModel>> _trackedObservables;
+    public IObservableCollection<RxSpyObservableModel> TrackedObservables => _trackedObservables.Value;
 
     [Reactive]
     public RxSpyObservablesGridViewModel GridViewModel { get; set; }

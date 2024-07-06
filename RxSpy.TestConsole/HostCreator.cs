@@ -2,10 +2,8 @@ using System.Net;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using RxSpy.Communication;
-using Microsoft.AspNetCore.Builder;
+using RxSpy.AspNet;
+using RxSpy.Grpc;
 
 namespace RxSpy.TestConsole;
 
@@ -52,7 +50,7 @@ public static class HostCreator
                     });
             });
 
-            services.AddSingleton<RxSpyGrpcService>();
+            services.AddSingleton<IRxSpyEventHandler, RxSpyHttpEventHandler>();
         });
 
         return host.Build();

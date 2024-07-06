@@ -1,13 +1,13 @@
 ﻿using System.Reactive.Disposables;
-using RxSpy.Events;
-using RxSpy.Protobuf.Events;
+using RxSpy.Entities;
+using RxSpy.Extensions;
 
 namespace RxSpy.Observables;
 
 internal class OperatorConnection<T> : IObservable<T>, IConnection
 {
-    private IObservable<T> _parent;
-    private OperatorInfo? _parentInfo;
+    private readonly IObservable<T> _parent;
+    private readonly OperatorInfo? _parentInfo;
 
     public OperatorInfo OperatorInfo { get; }
 
@@ -40,7 +40,7 @@ internal class OperatorConnection<T> : IObservable<T>, IConnection
             return _parent.Subscribe(observer);
         }
 
-        var subscriptionId = Session.OnSubscribe(OperatorInfo, _parentInfo);
+        var subscriptionId = Session.OnSubscribe(OperatorInfo, _parentInfo.Value);
 
         var disp = _parent.Subscribe(observer);
 

@@ -1,7 +1,8 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using RxSpy.Events;
-using RxSpy.Protobuf.Events;
+using RxSpy.Entities;
+using RxSpy.Extensions;
+using RxSpy.Factories;
 
 namespace RxSpy.Observables;
 

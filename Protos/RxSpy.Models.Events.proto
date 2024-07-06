@@ -27,79 +27,69 @@ message TypeInfo {
   string namespace = 2;
 }
 
-enum EventType {
-  OperatorCreated = 0;
-  OperatorCollected = 1;
-  Subscribe = 2;
-  Unsubscribe = 3;
-  OnNext = 4;
-  OnError = 5;
-  OnCompleted = 6;
-  TagOperator = 7;
-  Connected = 8;
-  Disconnected = 9;
-}
-
-message Event {
-  EventType eventType = 1;
-  int64 eventId = 2;
-  google.protobuf.Timestamp eventTime = 3;
-}
-
 message ConnectedEvent {
-  Event base_event = 1;
-  int64 operatorId = 2;
+  int64 eventId = 1;
+  google.protobuf.Timestamp eventTime = 2;
+  int64 operatorId = 3;
 }
 
 message DisconnectedEvent {
-  Event base_event = 1;
-  int64 connectionId = 2;
+  int64 eventId = 1;
+  google.protobuf.Timestamp eventTime = 2;
+  int64 connectionId = 3;
 }
 
 message OnCompletedEvent {
-  Event base_event = 1;
-  int64 operatorId = 2;
+  int64 eventId = 1;
+  google.protobuf.Timestamp eventTime = 2;
+  int64 operatorId = 3;
 }
 
 message OnErrorEvent {
-  Event base_event = 1;
-  TypeInfo errorType = 2;
-  string message = 3;
-  string stackTrace = 4;
-  int64 operatorId = 5;
+  int64 eventId = 1;
+  google.protobuf.Timestamp eventTime = 2;
+  TypeInfo errorType = 3;
+  string message = 4;
+  string stackTrace = 5;
+  int64 operatorId = 6;
 }
 
 message OnNextEvent {
-  Event base_event = 1;
-  int64 operatorId = 2;
-  string valueType = 3;
-  string value = 4;
-  int32 thread = 5;
+  int64 eventId = 1;
+  google.protobuf.Timestamp eventTime = 2;
+  int64 operatorId = 3;
+  string valueType = 4;
+  string value = 5;
+  int32 thread = 6;
 }
 
 message SubscribeEvent {
-  Event base_event = 1;
-  int64 childId = 2;
-  int64 parentId = 3;
+  int64 eventId = 1;
+  google.protobuf.Timestamp eventTime = 2;
+  int64 childId = 3;
+  int64 parentId = 4;
 }
 
 message TagOperatorEvent {
-  Event base_event = 1;
-  int64 operatorId = 2;
-  string tag = 3;
+  int64 eventId = 1;
+  google.protobuf.Timestamp eventTime = 2;
+  int64 operatorId = 3;
+  string tag = 4;
 }
 
 message UnsubscribeEvent {
-  Event base_event = 1;
-  int64 subscriptionId = 2;
+  int64 eventId = 1;
+  google.protobuf.Timestamp eventTime = 2;
+  int64 subscriptionId = 3;
 }
 
 message OperatorCreatedEvent {
-  Event base_event = 1;
-  int64 id = 2;
-  string name = 3;
-  CallSite callSite = 4;
-  MethodInfo operatorMethod = 5;
+  int64 eventId = 1;
+  google.protobuf.Timestamp eventTime = 2;
+  int64 id = 3;
+  string name = 4;
+  CallSite callSite = 5;
+  MethodInfo operatorMethod = 6;
 }
 
 message OperatorInfo {

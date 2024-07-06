@@ -14,6 +14,6 @@ public class RxSpyObservedValueModel
         ValueType = onNextEvent.ValueType;
         Value = onNextEvent.Value;
         Thread = onNextEvent.Thread;
-        Received = onNextEvent.BaseEvent.EventTime.ToTimeSpan();
+        Received = onNextEvent.EventTime.ToTimeSpan();
     }
 }

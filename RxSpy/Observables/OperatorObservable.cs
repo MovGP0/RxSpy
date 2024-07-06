@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Disposables;
-using RxSpy.Events;
-using RxSpy.Protobuf.Events;
+using RxSpy.Entities;
+using RxSpy.Factories;
 
 namespace RxSpy.Observables;
 
@@ -31,7 +31,7 @@ internal class OperatorObservable<T> : IObservable<T>, IOperatorObservable
             _inner = inner;
         }
 
-        private bool isReporting()
+        private bool IsReporting()
         {
             if (!_isReporting && Interlocked.CompareExchange(
                     ref _parent._currentlyReportingObserver,
@@ -46,7 +46,7 @@ internal class OperatorObservable<T> : IObservable<T>, IOperatorObservable
 
         public void OnCompleted()
         {
-            if (isReporting())
+            if (IsReporting())
                 _parent.Session.OnCompleted(EventFactory.OnCompleted(_parent.OperatorInfo));
 
             _inner.OnCompleted();
@@ -54,7 +54,7 @@ internal class OperatorObservable<T> : IObservable<T>, IOperatorObservable
 
         public void OnError(Exception error)
         {
-            if (isReporting())
+            if (IsReporting())
                 _parent.Session.OnError(EventFactory.OnError(_parent.OperatorInfo, error));
                 
             _inner.OnError(error);
@@ -62,7 +62,7 @@ internal class OperatorObservable<T> : IObservable<T>, IOperatorObservable
 
         public void OnNext(T value)
         {
-            if (isReporting())
+            if (IsReporting())
                 _parent.Session.OnNext(EventFactory.OnNext(_parent.OperatorInfo, typeof(T), value));
 
             _inner.OnNext(value);

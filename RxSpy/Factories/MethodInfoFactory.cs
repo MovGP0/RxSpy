@@ -1,14 +1,14 @@
-﻿using RxSpy.Utils;
-using System.Reflection;
+﻿using System.Reflection;
+using RxSpy.Utils;
 
-namespace RxSpy.Events;
+namespace RxSpy.Factories;
 
 public static class MethodInfoFactory
 {
-    public static RxSpy.Protobuf.Events.MethodInfo Create(MethodBase method)
+    public static RxSpy.Entities.MethodInfo Create(MethodBase method)
     {
         var name = GetName(method);
-        return new RxSpy.Protobuf.Events.MethodInfo
+        return new RxSpy.Entities.MethodInfo
         {
             Namespace = method.Name,
             DeclaringType = method.DeclaringType?.Name,

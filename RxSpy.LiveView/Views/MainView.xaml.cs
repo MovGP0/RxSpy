@@ -1,7 +1,7 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using ReactiveUI;
 using RxSpy.ViewModels;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace RxSpy.Views
 {

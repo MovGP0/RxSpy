@@ -1,5 +1,3 @@
 ﻿namespace RxSpy.Observables;
 
-internal interface IConnection: IOperatorObservable
-{
-}
+internal interface IConnection: IOperatorObservable;

@@ -1,24 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net481</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.63.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.27.2" />
-    <PackageReference Include="Grpc.Tools" Version="2.64.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
     <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />
     <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
     <PackageReference Include="Castle.Core" Version="5.1.1" />
+    <PackageReference Include="IndexRange" Version="1.0.3" Condition="'$(TargetFramework)' == 'net481'" />
   </ItemGroup>
   <ItemGroup>
-    <Protobuf Include="..\Protos\RxSpy.Models.Events.proto" GrpcServices="Server" />
+    <Compile Update="RxSpySession.Disposable.cs">
+      <DependentUpon>RxSpySession.cs</DependentUpon>
+    </Compile>
+    <Compile Update="RxSpySession.RxSpyEventHandler.cs">
+      <DependentUpon>RxSpySession.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

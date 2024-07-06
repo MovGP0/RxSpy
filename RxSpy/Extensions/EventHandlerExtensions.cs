@@ -1,31 +1,15 @@
-﻿using Google.Protobuf;
-using RxSpy.Protobuf.Events;
+﻿using RxSpy.Entities;
+using RxSpy.Events;
+using RxSpy.Factories;
 
-namespace RxSpy.Events;
+namespace RxSpy.Extensions;
 
 public static class EventHandlerExtensions
 {
-    private static long Publish<T>(Action<T> publishAction, T ev) where T: IMessage
+    private static long Publish<T>(Action<T> publishAction, T ev) where T: IRxSpyEvent
     {
         publishAction(ev);
-        return GetEventId(ev);
-    }
-
-    private static long GetEventId(IMessage message)
-    {
-        return message switch
-        {
-            ConnectedEvent connectedEvent => connectedEvent.BaseEvent.EventId,
-            DisconnectedEvent disconnectedEvent => disconnectedEvent.BaseEvent.EventId,
-            TagOperatorEvent tagEvent => tagEvent.BaseEvent.EventId,
-            UnsubscribeEvent unsubscribeEvent => unsubscribeEvent.BaseEvent.EventId,
-            SubscribeEvent subscribeEvent => subscribeEvent.BaseEvent.EventId,
-            OnCompletedEvent completedEvent => completedEvent.BaseEvent.EventId,
-            OnErrorEvent errorEvent => errorEvent.BaseEvent.EventId,
-            OnNextEvent nextEvent => nextEvent.BaseEvent.EventId,
-            OperatorCreatedEvent createdEvent => createdEvent.BaseEvent.EventId,
-            _ => -1L
-        };
+        return ev.EventId;
     }
 
     public static long OnConnected(this IRxSpyEventHandler eventHandler, OperatorInfo operatorInfo)

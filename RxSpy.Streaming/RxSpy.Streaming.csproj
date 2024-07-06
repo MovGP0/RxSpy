@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net481</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="OneOf" Version="3.0.271" />
+    <PackageReference Include="System.Text.Json" Version="8.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RxSpy\RxSpy.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="RxSpyStreamWriter.Disposable.cs">
+      <DependentUpon>RxSpyStreamWriter.cs</DependentUpon>
+    </Compile>
+    <Compile Update="RxSpyStreamWriter.RxSpyEventHandler.cs">
+      <DependentUpon>RxSpyStreamWriter.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+</Project>

@@ -1,17 +1,17 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using RxSpy.Events;
 using System.Reflection;
-using RxSpy.Protobuf.Events;
+using RxSpy.Entities;
+using RxSpy.Factories;
 
 namespace RxSpy.Utils;
 
 public static class CallSiteCache
 {
-    private readonly static GetStackFrameInfo _stackFrameFast;
+    private static readonly GetStackFrameInfo _stackFrameFast;
 
-    private readonly static ConcurrentDictionary<Tuple<IntPtr, int>, CallSite> _cache = new();
+    private static readonly ConcurrentDictionary<Tuple<IntPtr, int>, CallSite> _cache = new();
 
     private delegate Tuple<IntPtr, int> GetStackFrameInfo(int skipFrames);
 

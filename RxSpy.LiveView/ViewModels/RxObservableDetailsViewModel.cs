@@ -1,6 +1,8 @@
 ﻿using System.Reactive.Linq;
 using System.Text;
+using DynamicData.Binding;
 using ReactiveUI;
+using RxSpy.Extensions;
 using RxSpy.Models;
 
 namespace RxSpy.ViewModels;
@@ -9,8 +11,8 @@ public class RxSpyObservableDetailsViewModel : ReactiveObject
 {
     private RxSpyObservableModel _model;
 
-    readonly ObservableAsPropertyHelper<IReadOnlyReactiveList<RxSpyObservedValueViewModel>> _observedValues;
-    public IReadOnlyReactiveList<RxSpyObservedValueViewModel> ObservedValues => _observedValues.Value;
+    readonly ObservableAsPropertyHelper<IObservableCollection<RxSpyObservedValueViewModel>> _observedValues;
+    public IObservableCollection<RxSpyObservedValueViewModel> ObservedValues => _observedValues.Value;
 
     readonly ObservableAsPropertyHelper<bool> _valuesGridIsEnabled;
     public bool ValuesGridIsEnabled => _valuesGridIsEnabled.Value;
@@ -33,7 +35,7 @@ public class RxSpyObservableDetailsViewModel : ReactiveObject
 
         this.WhenAnyValue(x => x._model.ObservedValues)
             .Select(x => x.CreateDerivedCollection(m => new RxSpyObservedValueViewModel(m)))
-            .Scan((prev, cur) => { using (prev) return cur; })
+            .Scan((prev, cur) => { return cur; })
             .ToProperty(this, x => x.ObservedValues, out _observedValues);
 
         this.WhenAnyValue(x => x._model.Parents, x => new RxSpyObservablesGridViewModel(x))

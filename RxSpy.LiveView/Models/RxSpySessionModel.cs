@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using ReactiveUI;
-using CP.Reactive;
+using DynamicData.Binding;
 using Google.Protobuf;
 using ReactiveUI.Fody.Helpers;
 using RxSpy.Protobuf.Events;
@@ -13,7 +13,7 @@ public class RxSpySessionModel : ReactiveObject
 
     readonly ConcurrentDictionary<long, RxSpySubscriptionModel> _subscriptionRepository = new();
 
-    public ReactiveList<RxSpyObservableModel> TrackedObservables { get; set; }
+    public ObservableCollectionExtended<RxSpyObservableModel> TrackedObservables { get; set; }
 
     [Reactive]
     public long SignalCount { get; set; }
@@ -23,7 +23,7 @@ public class RxSpySessionModel : ReactiveObject
 
     public RxSpySessionModel()
     {
-        TrackedObservables = new ReactiveList<RxSpyObservableModel>();
+        TrackedObservables = new ObservableCollectionExtended<RxSpyObservableModel>();
     }
 
     internal void OnEvent(IMessage ev)
@@ -74,7 +74,7 @@ public class RxSpySessionModel : ReactiveObject
             IsActive = true
         };
 
-        _subscriptionRepository.TryAdd(subscribeEvent.BaseEvent.EventId, subscriptionModel);
+        _subscriptionRepository.TryAdd(subscribeEvent.EventId, subscriptionModel);
 
         parent.Subscriptions.Add(subscriptionModel);
 

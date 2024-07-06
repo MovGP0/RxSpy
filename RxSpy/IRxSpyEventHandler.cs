@@ -1,8 +1,8 @@
-﻿using RxSpy.Protobuf.Events;
+﻿using RxSpy.Events;
 
 namespace RxSpy;
 
-public interface IRxSpyEventHandler: IDisposable
+public interface IRxSpyEventHandler
 {
     void OnCreated(OperatorCreatedEvent onCreatedEvent);
     void OnCompleted(OnCompletedEvent onCompletedEvent);

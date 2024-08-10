@@ -9,22 +9,22 @@
     <RootNamespace>RxSpy</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.27.2" />
-    <PackageReference Include="Grpc.Tools" Version="2.64.0">
+    <PackageReference Include="Google.Protobuf" Version="3.27.3" />
+    <PackageReference Include="Grpc.Tools" Version="2.65.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.65.0" />
     <PackageReference Include="GraphSharp" Version="1.1.0" />
     <PackageReference Include="QuickGraph" Version="3.6.61119.7" />
     <PackageReference Include="ReactiveUI" Version="20.1.1" />
     <PackageReference Include="ReactiveUI.WPF" Version="20.1.1" />
     <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
     <PackageReference Include="Splat" Version="15.1.1" />
-    <PackageReference Include="DynamicData" Version="8.4.1" />
+    <PackageReference Include="DynamicData" Version="9.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <Protobuf Include="..\Protos\RxSpy.Models.Events.proto" GrpcServices="Server" />
+    <Protobuf Include="..\Protos\RxSpy.Models.Events.proto" GrpcServices="Client" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="FodyWeavers.xml" />

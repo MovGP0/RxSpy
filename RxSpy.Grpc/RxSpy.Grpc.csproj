@@ -6,16 +6,17 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.63.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.27.2" />
-    <PackageReference Include="Grpc.Tools" Version="2.64.0">
+    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.65.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.27.3" />
+    <PackageReference Include="Grpc.Tools" Version="2.65.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Mapster" Version="7.4.0" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.7" />
   </ItemGroup>
   <ItemGroup>
-    <Protobuf Include="..\Protos\RxSpy.Models.Events.proto" GrpcServices="Server" />
+    <Protobuf Include="..\Protos\RxSpy.Models.Events.proto" GrpcServices="Both" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RxSpy\RxSpy.csproj" />

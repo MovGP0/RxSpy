@@ -1,6 +1,6 @@
 namespace RxSpy.Events;
 
-public struct SubscribeEvent : IRxSpyEvent
+public partial struct SubscribeEvent : IRxSpyEvent
 {
     public long EventId { get; init; }
     public long EventTime { get; init; }

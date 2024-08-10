@@ -2,7 +2,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using Castle.DynamicProxy;
 using RxSpy.Interception;
 
@@ -52,6 +51,7 @@ public sealed partial class RxSpySession : IRxSpySession
     private static void InstallInterceptingQueryLanguage(RxSpySession session)
     {
         // Make sure the assembly is initialized
+        _ = Assembly.Load(new AssemblyName("System.Reactive"));
         _ = Assembly.Load(new AssemblyName("System.Reactive.Linq"));
         Observable.Empty<Unit>();
 
@@ -80,12 +80,9 @@ public sealed partial class RxSpySession : IRxSpySession
 
         var proxyGenerator = new ProxyGenerator();
 
-        // Create a proxy for the public interface
-        var publicProxy = new QueryLanguageProxy(originalImpl);
-
         // Intercept calls to the public proxy
         IInterceptor interceptor = new QueryLanguageInterceptor(session);
-        var proxy = proxyGenerator.CreateInterfaceProxyWithTarget<IPublicQueryLanguage>(publicProxy, interceptor);
+        var proxy = proxyGenerator.CreateInterfaceProxyWithoutTarget<IQueryLanguage>(interceptor);
 
         if (proxy is null)
         {
@@ -93,55 +90,13 @@ public sealed partial class RxSpySession : IRxSpySession
         }
 
         // Use dynamic assembly generation to create a type that implements the internal interface
-        var internalProxy = CreateInternalProxy(iQueryLanguage, proxy);
+        var internalProxy = ProxyFactory.CreateProxy(iQueryLanguage, proxy, originalImpl);
 
-        defaultImplementationField.SetValue(null, internalProxy);
-    }
-
-    private static object CreateInternalProxy(Type internalInterface, object target)
-    {
-        var assemblyName = new AssemblyName("DynamicProxyAssembly");
-        var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
-        var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
-        var typeBuilder = moduleBuilder.DefineType("InternalProxy", TypeAttributes.Public | TypeAttributes.Class);
-
-        typeBuilder.AddInterfaceImplementation(internalInterface);
-
-        foreach (var method in internalInterface.GetMethods())
+        // replace the default implementation with the proxy
+        if (internalProxy is not null)
         {
-            var parameters = method.GetParameters();
-            var parameterTypes = parameters.Select(p => p.ParameterType).ToArray();
-
-            var methodBuilder = typeBuilder.DefineMethod(
-                method.Name,
-                MethodAttributes.Public | MethodAttributes.Virtual,
-                method.ReturnType,
-                parameterTypes);
-
-            var ilGenerator = methodBuilder.GetILGenerator();
-
-            // Load the target object (the proxy)
-            ilGenerator.Emit(OpCodes.Ldarg_0);
-            ilGenerator.Emit(OpCodes.Ldfld, typeBuilder.DefineField("_target", target.GetType(), FieldAttributes.Private));
-
-            // Load the arguments
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                ilGenerator.Emit(OpCodes.Ldarg, i + 1);
-            }
-
-            // Call the method on the target object
-            ilGenerator.Emit(OpCodes.Callvirt, target.GetType().GetMethod(method.Name));
-            ilGenerator.Emit(OpCodes.Ret);
+            defaultImplementationField.SetValue(null, internalProxy);
         }
-
-        // Define the target field
-        typeBuilder.DefineField("_target", target.GetType(), FieldAttributes.Private);
-
-        var proxyType = typeBuilder.CreateType();
-        var proxyInstance = Activator.CreateInstance(proxyType, target);
-
-        return proxyInstance;
     }
 
     public IDisposable Capture()

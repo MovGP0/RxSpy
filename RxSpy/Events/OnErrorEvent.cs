@@ -2,7 +2,7 @@ using RxSpy.Entities;
 
 namespace RxSpy.Events;
 
-public struct OnErrorEvent : IRxSpyEvent
+public partial struct OnErrorEvent : IRxSpyEvent
 {
     public long EventId { get; init; }
     public long EventTime { get; init; }

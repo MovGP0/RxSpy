@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.Streaming", "RxSpy.St
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.AspNet.TestConsole", "RxSpy.AspNet.TestConsole\RxSpy.AspNet.TestConsole.csproj", "{132348F8-2F75-4799-854F-F976E79F4337}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSpy.Tests", "RxSpy.Tests\RxSpy.Tests.csproj", "{A1192B3B-2039-4D27-B4ED-4CA9A26E5791}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,6 +74,10 @@ Global
 		{132348F8-2F75-4799-854F-F976E79F4337}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{132348F8-2F75-4799-854F-F976E79F4337}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{132348F8-2F75-4799-854F-F976E79F4337}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1192B3B-2039-4D27-B4ED-4CA9A26E5791}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1192B3B-2039-4D27-B4ED-4CA9A26E5791}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1192B3B-2039-4D27-B4ED-4CA9A26E5791}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1192B3B-2039-4D27-B4ED-4CA9A26E5791}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

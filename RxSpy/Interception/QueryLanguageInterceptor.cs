@@ -1,4 +1,3 @@
-using System.Reactive.Linq;
 using Castle.DynamicProxy;
 using RxSpy.Constants;
 using RxSpy.Events;

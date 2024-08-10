@@ -3,7 +3,7 @@ using System.Diagnostics;
 namespace RxSpy.Entities;
 
 [DebuggerDisplay("{Namespace}.{DeclaringType}.{Name}{Signature}")]
-public struct MethodInfo
+public partial struct MethodInfo
 {
     public string Namespace { get; init; }
     public string? DeclaringType { get; init; }

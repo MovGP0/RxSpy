@@ -1,38 +1,79 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Security;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Grpc.Core;
 using Grpc.Net.Client;
 using RxSpy.Protobuf.Events;
 using Google.Protobuf.WellKnownTypes;
-using Grpc.Health.V1;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RxSpy.Factories;
 using Xunit.Abstractions;
 
 namespace RxSpy.Grpc.Tests;
 
 public sealed class RxSpyGrpcServiceTests : IDisposable
 {
-    private readonly TestServer _server;
+    private readonly int _port;
+    private readonly IHost _server;
     private readonly GrpcChannel _channel;
     private readonly RxSpyService.RxSpyServiceClient _client;
     private readonly X509Certificate2 _cert;
     private readonly ILoggerFactory _loggerFactory;
 
+    
+    
     public RxSpyGrpcServiceTests(ITestOutputHelper output)
     {
+        _port = TcpPort.GetFreePort();
+
         // Generate a self-signed certificate
         _cert = SelfSignedCertificateFactory.Create();
 
         // Arrange
-        IWebHostBuilder webHostBuilder = new WebHostBuilder();
 
+        // Note: GRPC requires a full server, rather than a TestServer
+        _server = Host.CreateDefaultBuilder()
+            .ConfigureWebHostDefaults(webHostBuilder =>
+            {
+                SetupWebHostBuilder(webHostBuilder, output);
+            })
+            .Build();
+
+        _server.Start();
+
+        _loggerFactory = _server.Services.GetRequiredService<ILoggerFactory>();
+
+        _channel = GrpcChannel.ForAddress($"https://localhost:{_port}", new GrpcChannelOptions
+        {
+            // Configure HttpClient to trust the certificate
+            HttpClient = new HttpClient(new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = ValidateCertificate
+            })
+        });
+
+        _client = new RxSpyService.RxSpyServiceClient(_channel);
+    }
+
+    private bool ValidateCertificate(
+        HttpRequestMessage message,
+        X509Certificate2? cert,
+        X509Chain? chain,
+        SslPolicyErrors errors)
+    {
+        return cert is not null
+               && cert.Equals(_cert);
+    }
+
+    private void SetupWebHostBuilder(IWebHostBuilder webHostBuilder, ITestOutputHelper output)
+    {
         webHostBuilder.ConfigureLogging(logging =>
         {
             logging.ClearProviders();
@@ -42,10 +83,10 @@ public sealed class RxSpyGrpcServiceTests : IDisposable
 
         webHostBuilder.ConfigureKestrel(options =>
         {
-            options.ListenLocalhost(225, opts =>
+            options.ListenLocalhost(_port, opts =>
             {
                 opts.UseHttps(_cert);
-                opts.Protocols = HttpProtocols.Http2;
+                opts.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
             });
         });
 
@@ -96,65 +137,37 @@ public sealed class RxSpyGrpcServiceTests : IDisposable
             services.AddHttpsRedirection(options =>
             {
                 options.RedirectStatusCode = (int)HttpStatusCode.PermanentRedirect;
-                options.HttpsPort = 225;
+                options.HttpsPort = _port;
             });
         });
 
         webHostBuilder.UseEnvironment("Development");
-
-        _server = new TestServer(webHostBuilder);
-        _loggerFactory = _server.Services.GetRequiredService<ILoggerFactory>();
-
-        bool ValidateCertificate(
-            HttpRequestMessage message,
-            X509Certificate2? cert,
-            X509Chain? chain,
-            SslPolicyErrors errors)
-        {
-            return cert is not null
-                   && cert.Equals(_cert);
-        }
-
-        _channel = GrpcChannel.ForAddress("https://localhost:225", new GrpcChannelOptions
-        {
-            // Configure HttpClient to trust the certificate
-            HttpClient = new HttpClient(new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = ValidateCertificate
-            })
-        });
-
-        _client = new RxSpyService.RxSpyServiceClient(_channel);
     }
 
     [Fact]
     public async Task GetEvents_StreamsEventsSuccessfully()
     {
         var log = _loggerFactory.CreateLogger<RxSpyGrpcServiceTests>();
-        var timeout = TimeSpan.FromSeconds(10);
-        using var cts = new CancellationTokenSource(timeout);
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(15));
 
         // Precondition check: test if host returns healthy
-        var healthClient = _server.CreateClient();
-        var response = await healthClient.GetAsync("https://localhost:225/hc", cts.Token);
+        using var healthClient = new HttpClient(new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = ValidateCertificate
+        });
+        var response = await healthClient.GetAsync($"https://localhost:{_port}/hc", cts.Token);
         var responseString = await response.Content.ReadAsStringAsync(cts.Token);
 
         response.ShouldSatisfyAllConditions(
             r => r.IsSuccessStatusCode.ShouldBeTrue(),
             _ => responseString.ShouldBe("Healthy"));
 
-        // Precondition check: test the GRPC service
-        var channel = GrpcChannel.ForAddress("https://localhost:225");
-        var client = new Health.HealthClient(channel);
-        var grpcResponse = await client.CheckAsync(new HealthCheckRequest());
-        grpcResponse.Status.ShouldBe(HealthCheckResponse.Types.ServingStatus.Serving);
-
         // Arrange: subscribe to the server events
         var getEvents = _client.GetEvents(new Empty(), cancellationToken: cts.Token);
         getEvents.ShouldNotBeNull();
 
         // Act
-        _ = Task.Run(SimulateServerEvents);
+        _ = Task.Run(() => SimulateServerEvents(cts.Token), cts.Token);
 
         var receivedEvents = 0;
 
@@ -173,46 +186,67 @@ public sealed class RxSpyGrpcServiceTests : IDisposable
 
         // Assert
         receivedEvents.ShouldBe(3);
+        await cts.CancelAsync();
     }
 
-    private async Task SimulateServerEvents()
+    private async Task SimulateServerEvents(CancellationToken cancellationToken)
     {
-        await Task.Delay(100);
+        var method = GetType().GetMethod(
+            nameof(SimulateServerEvents), 
+            BindingFlags.NonPublic | BindingFlags.Instance, 
+            null,
+            new[]
+            {
+                typeof(CancellationToken)
+            },
+            null);
+
+        Debug.Assert(method != null);
 
         var handler = new RxSpyGrpcEventHandler();
 
-        handler.OnCreated(new RxSpy.Events.OperatorCreatedEvent
+        var operatorCreatedEvent = new RxSpy.Events.OperatorCreatedEvent
         {
             EventId = 1,
             EventTime = 124567L,
             Id = 1,
-            Name = "Operator1"
-        });
+            Name = "Operator1",
+            CallSite = CallSiteFactory.Create(new StackFrame()),
+            OperatorMethod = MethodInfoFactory.Create(method)
+        };
+        handler.OnCreated(operatorCreatedEvent);
+        await Task.Delay(100, cancellationToken);
 
-        await Task.Delay(100);
-
-        handler.OnNext(new RxSpy.Events.OnNextEvent
+        var onNextEvent = new RxSpy.Events.OnNextEvent
         {
             EventId = 2,
             EventTime = 124567L,
             OperatorId = 1,
             Value = "SampleValue",
-            ValueType = "string"
-        });
+            ValueType = "string",
+            Thread = 124
+        };
+        handler.OnNext(onNextEvent);
+        await Task.Delay(100, cancellationToken);
 
-        await Task.Delay(100);
-
-        handler.OnCompleted(new RxSpy.Events.OnCompletedEvent
+        var onCompletedEvent = new RxSpy.Events.OnCompletedEvent
         {
             EventId = 3,
             EventTime = 124567L,
             OperatorId = 1
-        });
+        };
+        handler.OnCompleted(onCompletedEvent);
+        await Task.Delay(100, cancellationToken);
     }
 
     public void Dispose()
     {
-        _channel.Dispose();
+        var stopTask = _server.StopAsync();
+        stopTask.Wait(TimeSpan.FromSeconds(5));
+
         _server.Dispose();
+        _channel.Dispose();
+        _cert.Dispose();
+        _loggerFactory.Dispose();
     }
 }

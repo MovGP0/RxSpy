@@ -14,6 +14,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Protos", "Protos", "{440EA6A5-6BF2-4878-AFDC-24C246BE8A7F}"
 	ProjectSection(SolutionItems) = preProject
 		Protos\RxSpy.Models.Events.proto = Protos\RxSpy.Models.Events.proto
+		Protos\helloworld.proto = Protos\helloworld.proto
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{551D5F74-F794-4338-B26A-8224FA07B279}"

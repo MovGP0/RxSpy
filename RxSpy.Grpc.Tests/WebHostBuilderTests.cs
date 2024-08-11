@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 
 namespace RxSpy.Grpc.Tests;
 
-public sealed class CustomMiddlewareTests
+public sealed class CustomMiddlewareTests : IDisposable
 {
     private readonly HttpClient _client;
 
@@ -110,5 +110,10 @@ public sealed class CustomMiddlewareTests
         Assert.Contains("Sunny", responseString);
         Assert.Contains("Cloudy", responseString);
         Assert.Contains("Rainy", responseString);
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
     }
 }

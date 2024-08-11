@@ -21,6 +21,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Shouldly" Version="4.2.1" />
+    <PackageReference Include="MartinCostello.Logging.XUnit" Version="0.4.0" />
+  </ItemGroup>
+  <ItemGroup Label="GRPC">
     <PackageReference Include="Google.Protobuf" Version="3.27.3" />
     <PackageReference Include="Grpc.Tools" Version="2.65.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -28,11 +31,11 @@
     </PackageReference>
     <PackageReference Include="Grpc.Net.Client" Version="2.65.0" />
     <PackageReference Include="Grpc.AspNetCore.Server" Version="2.65.0" />
-    <PackageReference Include="MartinCostello.Logging.XUnit" Version="0.4.0" />
     <PackageReference Include="Grpc.AspNetCore.HealthChecks" Version="2.39.0" />
   </ItemGroup>
   <ItemGroup>
     <Protobuf Include="..\Protos\RxSpy.Models.Events.proto" GrpcServices="Both" />
+    <Protobuf Include="..\Protos\HelloWorld.proto" GrpcServices="Both" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

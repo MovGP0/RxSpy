@@ -16,7 +16,7 @@ public static class CallSiteFactory
         return new()
         {
             Line = frame.GetFileLineNumber(),
-            File = frame.GetFileName(),
+            File = frame.GetFileName() ?? "",
             ILOffset = frame.GetILOffset(),
             Method = method != null ? MethodInfoFactory.Create(method) : null
         };

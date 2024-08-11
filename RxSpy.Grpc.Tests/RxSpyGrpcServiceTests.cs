@@ -56,7 +56,8 @@ public sealed class RxSpyGrpcServiceTests : IDisposable
             HttpClient = new HttpClient(new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = ValidateCertificate
-            })
+            }),
+            LoggerFactory = _loggerFactory
         });
 
         _client = new RxSpyService.RxSpyServiceClient(_channel);
@@ -79,6 +80,7 @@ public sealed class RxSpyGrpcServiceTests : IDisposable
             logging.ClearProviders();
             logging.AddXUnit(output);
             logging.SetMinimumLevel(LogLevel.Debug);
+            logging.AddFilter("Grpc", LogLevel.Debug);
         });
 
         webHostBuilder.ConfigureKestrel(options =>
